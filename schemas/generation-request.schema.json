@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://media-router.dev/schemas/generation-request.schema.json",
+  "title": "GenerationRequest",
+  "type": "object",
+  "required": ["provider", "model", "input"],
+  "properties": {
+    "type": {
+      "enum": ["image", "video"]
+    },
+    "provider": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "input": {
+      "type": "object",
+      "required": ["prompt"],
+      "properties": {
+        "prompt": { "type": "string" },
+        "negativePrompt": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "count": { "type": "integer", "minimum": 1 },
+        "dimensionMode": { "enum": ["nearest", "strict"] }
+      },
+      "additionalProperties": true
+    },
+    "providerOptions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

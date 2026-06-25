@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://media-router.dev/schemas/generation-job.schema.json",
+  "title": "GenerationJob",
+  "type": "object",
+  "required": ["id", "type", "provider", "providerId", "model", "status"],
+  "properties": {
+    "id": { "type": "string" },
+    "type": { "enum": ["image", "video", "audio", "model3d", "file"] },
+    "provider": { "type": "string" },
+    "providerId": { "type": "string" },
+    "model": { "type": "string" },
+    "status": {
+      "enum": ["queued", "running", "succeeded", "failed", "cancelled"]
+    },
+    "providerJobId": { "type": "string" },
+    "providerState": { "type": "object", "additionalProperties": true },
+    "children": {
+      "type": "array",
+      "items": { "$ref": "#" }
+    },
+    "result": { "$ref": "generation-result.schema.json" },
+    "error": { "$ref": "media-router-error.schema.json" },
+    "raw": true,
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" },
+    "pollAfterMs": { "type": "number", "minimum": 0 },
+    "resolved": { "type": "object" }
+  },
+  "additionalProperties": true
+}

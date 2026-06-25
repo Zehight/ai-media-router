@@ -1,0 +1,20 @@
+{
+  "name": "media-router",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript-first SDK for routing image and video generation across media providers.",
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "typecheck:tests": "pnpm -r --if-present typecheck:test",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://media-router.dev/schemas/media-router-error.schema.json",
+  "title": "MediaRouterError",
+  "type": "object",
+  "required": ["kind", "code", "message", "provider", "retryable"],
+  "properties": {
+    "kind": { "const": "MediaRouterError" },
+    "code": {
+      "enum": [
+        "BAD_REQUEST",
+        "AUTH_ERROR",
+        "RATE_LIMITED",
+        "REGION_RESTRICTED",
+        "CONTENT_REJECTED",
+        "PROVIDER_ERROR",
+        "TIMEOUT",
+        "NOT_FOUND",
+        "UNKNOWN"
+      ]
+    },
+    "message": { "type": "string" },
+    "provider": { "type": "string" },
+    "model": { "type": "string" },
+    "retryable": { "type": "boolean" },
+    "statusCode": { "type": "number" },
+    "raw": true
+  },
+  "additionalProperties": true
+}

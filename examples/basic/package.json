@@ -1,0 +1,16 @@
+{
+  "name": "@media-router/example-basic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@media-router/client": "workspace:*",
+    "@media-router/providers": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  },
+  "scripts": {
+    "start": "tsx index.ts"
+  }
+}
