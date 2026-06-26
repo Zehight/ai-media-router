@@ -11,7 +11,7 @@ import {
   type ProviderPlugin,
   type ProviderPollContext,
   type ProviderRuntimeContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import {
   providerError,
   statusFrom,

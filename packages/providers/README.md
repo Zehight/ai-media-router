@@ -59,7 +59,7 @@ import {
   getImageInputs,
   requirePrompt,
   unsupportedInput,
-} from "@media-router/providers"
+} from "@miragari/providers"
 
 export const exampleProvider = defineHttpProvider({
   id: "example",
@@ -394,7 +394,7 @@ import {
   pendingProviderJob,
   pendingStatus,
   providerError,
-} from "@media-router/providers"
+} from "@miragari/providers"
 
 export const taskProvider = defineHttpProvider({
   id: "task-provider",
@@ -491,7 +491,7 @@ export const cancellableProvider = defineHttpProvider({
 Provider PRs should use the shared in-repo test harness to verify request
 mapping and response mapping with the same runtime shape used by built-in
 providers. The harness is intentionally not exported from
-`@media-router/providers`; import it by relative path from provider tests.
+`@miragari/providers`; import it by relative path from provider tests.
 
 ```ts
 import {
@@ -558,7 +558,7 @@ provider status, and cancellation when the provider supports it.
   mapping before adding custom local helpers.
 - Preserve provider-specific controls through `providerOptions`.
 - Normalize errors with `createMediaRouterError()` or `MediaRouterException`
-  from `@media-router/core`; do not hand-roll error objects.
+  from `@miragari/core`; do not hand-roll error objects.
 - Custom `normalizeError` results that are not branded `MediaRouterError`
   values are treated as `UNKNOWN`.
 - Terminal failed jobs must set `job.error` with `createMediaRouterError()`;

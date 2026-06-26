@@ -8,7 +8,7 @@ import type {
   ProviderPlugin,
   ProviderPollContext,
   ResolvedDimensions,
-} from "@media-router/core"
+} from "@miragari/core"
 
 export type ProviderFetchCall = {
   url: string

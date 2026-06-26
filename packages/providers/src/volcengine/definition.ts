@@ -1,4 +1,4 @@
-import type { GenerationStatus, ModelDefinition } from "@media-router/core"
+import type { GenerationStatus, ModelDefinition } from "@miragari/core"
 
 export const volcengineModels: Record<string, ModelDefinition> = {
   "doubao-seedream-4-5-251128": {
@@ -112,7 +112,7 @@ export const volcengineModels: Record<string, ModelDefinition> = {
       },
       dimensions: {
         aspectRatios: ["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"],
-        video: { resolutions: ["480p", "720p", "1080p"] },
+        video: { resolutions: ["480p", "720p"] },
       },
       durations: Array.from({ length: 12 }, (_, index) => index + 4),
       maxImages: 9,

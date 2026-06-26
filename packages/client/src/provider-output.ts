@@ -5,7 +5,7 @@ import {
   type GenerationResult,
   type MediaAsset,
   type MediaType,
-} from "@media-router/core"
+} from "@miragari/core"
 import { normalizeTerminalJob } from "./terminal.js"
 
 const JOB_STATUSES = new Set(["queued", "running", "succeeded", "failed", "cancelled"])
@@ -74,7 +74,13 @@ export function normalizeProviderJob(
   assertString(job.provider, "provider", job, context)
   assertString(job.providerId, "providerId", job, context)
   assertString(job.model, "model", job, context)
-  assertMatchesContext(job, context, "job")
+  const validatedJob = job as Record<string, unknown> & {
+    type: MediaType
+    provider: string
+    providerId: string
+    model: string
+  }
+  assertMatchesContext(validatedJob, context, "job")
   if (status === "succeeded" && "result" in job && job.result != null) {
     const result = normalizeProviderResult(job.result, context)
     if (result.jobId !== job.id) {
@@ -112,7 +118,13 @@ export function normalizeProviderResult(
   assertString(result.provider, "provider", result, context)
   assertString(result.providerId, "providerId", result, context)
   assertString(result.model, "model", result, context)
-  assertMatchesContext(result, context, "result")
+  const validatedResult = result as Record<string, unknown> & {
+    type: MediaType
+    provider: string
+    providerId: string
+    model: string
+  }
+  assertMatchesContext(validatedResult, context, "result")
   if (result.status !== "succeeded") {
     throw providerContractError("Provider returned invalid result status", context, result)
   }

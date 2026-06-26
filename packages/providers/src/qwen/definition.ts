@@ -2,7 +2,7 @@ import type {
   DimensionCapabilities,
   GenerationStatus,
   ModelDefinition,
-} from "@media-router/core"
+} from "@miragari/core"
 
 const qwenImage20Dimensions: DimensionCapabilities = {
   image: {

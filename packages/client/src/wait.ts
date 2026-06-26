@@ -7,7 +7,7 @@ import {
   type MediaRouterError,
   type PartialFailureMode,
   type ProviderRuntimeContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import { reduceBatchTerminalJob } from "./batch.js"
 import { normalizeProviderJob } from "./provider-output.js"
 import { normalizeFailedJobError, resolveTerminalResult } from "./terminal.js"

@@ -1,4 +1,4 @@
-import type { DimensionCapabilities, ModelDefinition } from "@media-router/core"
+import type { DimensionCapabilities, ModelDefinition } from "@miragari/core"
 
 const videoDimensions: DimensionCapabilities = {
   aspectRatios: ["16:9", "9:16", "1:1", "4:3", "3:4"],

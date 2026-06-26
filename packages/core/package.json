@@ -1,11 +1,36 @@
 {
-  "name": "@media-router/core",
+  "name": "@miragari/core",
   "version": "0.1.0",
+  "description": "Shared protocol, validation, and provider types for MediaRouter.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "license": "UNLICENSED",
+  "author": "Zehight",
+  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/Zehight/mediaRouter/issues"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "media-router",
+    "sdk",
+    "ai",
+    "image-generation",
+    "video-generation"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
@@ -14,6 +39,7 @@
     }
   },
   "scripts": {
+    "prepack": "pnpm run build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:test": "tsc -p tsconfig.test.json",

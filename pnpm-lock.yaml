@@ -23,7 +23,7 @@ importers:
 
   examples/basic:
     dependencies:
-      '@media-router/providers':
+      '@miragari/providers':
         specifier: workspace:*
         version: link:../../packages/providers
     devDependencies:
@@ -33,7 +33,7 @@ importers:
 
   packages/client:
     dependencies:
-      '@media-router/core':
+      '@miragari/core':
         specifier: workspace:*
         version: link:../core
 
@@ -41,10 +41,10 @@ importers:
 
   packages/providers:
     dependencies:
-      '@media-router/client':
+      '@miragari/client':
         specifier: workspace:*
         version: link:../client
-      '@media-router/core':
+      '@miragari/core':
         specifier: workspace:*
         version: link:../core
 

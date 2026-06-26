@@ -9,13 +9,13 @@ import type {
   ProviderCreateContext,
   ProviderCreateOutput,
   ProviderPollContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import {
   createId,
   createMediaRouterError,
   mapProviderStatus,
   normalizeMediaRouterError,
-} from "@media-router/core"
+} from "@miragari/core"
 
 type PromptFlagValue = string | number | boolean | undefined
 
@@ -109,7 +109,7 @@ export function requestIntent(context: ProviderCreateContext): ProviderRequestIn
     type: requestMediaType(context),
     action: context.request.action,
     prompt: stringInput(context.request.input.prompt),
-    text: stringInput(context.request.input.text),
+    text: "text" in context.request.input ? stringInput(context.request.input.text) : undefined,
     options: context.request.options ?? {},
     providerOptions: context.request.providerOptions ?? {},
     media,

@@ -1,12 +1,36 @@
 {
-  "name": "@media-router/providers",
+  "name": "@miragari/providers",
   "version": "0.1.0",
+  "description": "Built-in MediaRouter providers and createMediaRouter() factory.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "license": "UNLICENSED",
+  "author": "Zehight",
+  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "directory": "packages/providers"
+  },
+  "bugs": {
+    "url": "https://github.com/Zehight/mediaRouter/issues"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "media-router",
+    "sdk",
+    "ai",
+    "image-generation",
+    "video-generation"
+  ],
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
@@ -15,13 +39,14 @@
     }
   },
   "scripts": {
+    "prepack": "pnpm --dir ../core run build && pnpm --dir ../client run build && pnpm run build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:test": "tsc -p tsconfig.test.json",
     "test": "vitest run"
   },
   "dependencies": {
-    "@media-router/client": "workspace:*",
-    "@media-router/core": "workspace:*"
+    "@miragari/client": "workspace:*",
+    "@miragari/core": "workspace:*"
   }
 }

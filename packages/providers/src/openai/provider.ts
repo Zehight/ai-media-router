@@ -4,7 +4,7 @@ import {
   type MediaInput,
   type ProviderCreateContext,
   type ProviderPollContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import {
   authHeaders,
   completed,

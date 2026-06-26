@@ -5,7 +5,7 @@ import {
   type ProviderCancelContext,
   type ProviderCreateContext,
   type ProviderPollContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import {
   completed,
   defineHttpProvider,

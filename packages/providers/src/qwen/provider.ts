@@ -23,7 +23,7 @@ import {
   type MediaInput,
   type MediaRouterError,
   type ProviderCreateContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import { qwenModels, qwenStatusMap } from "./definition.js"
 
 type QwenContentItem = { text: string } | { image: string }

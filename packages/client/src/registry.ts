@@ -4,7 +4,7 @@ import {
   type ProviderInstanceConfig,
   type ProviderPlugin,
   type ProviderRuntimeContext,
-} from "@media-router/core"
+} from "@miragari/core"
 
 export type ProviderInstanceInput =
   | string

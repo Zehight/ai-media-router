@@ -14,7 +14,7 @@ import {
   type PartialFailureMode,
   type ProviderPlugin,
   type ProviderRuntimeContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import {
   cancelBatchJob,
   createSplitImageJob,

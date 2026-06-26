@@ -6,12 +6,12 @@ import {
   type MediaRouterDefaults,
   type MediaRouterOptions,
   type MediaRouterProfile,
-} from "@media-router/client"
+} from "@miragari/client"
 import {
   MediaRouterException,
   createMediaRouterError,
   type ProviderPlugin,
-} from "@media-router/core"
+} from "@miragari/core"
 import { builtinProviderPlugins } from "./builtin.js"
 
 const builtinProviderEnvKeys = {
@@ -85,7 +85,8 @@ export function createMediaRouter(input: BuiltinMediaRouterInput = {}): MediaRou
 
 function builtinMediaRouterOptions(input: BuiltinMediaRouterInput): BuiltinMediaRouterOptions {
   if (Array.isArray(input)) return { providers: input }
-  return typeof input === "string" ? { provider: input } : input
+  if (typeof input === "string") return { provider: input }
+  return input as BuiltinMediaRouterOptions
 }
 
 function optionDefaults(options: BuiltinMediaRouterOptions): MediaRouterDefaults | undefined {
@@ -208,15 +209,15 @@ function providerInstances(options: BuiltinMediaRouterOptions): MediaRouterOptio
       providers.map((provider) => [provider, requiredEnvApiKey(provider)]),
     )
   }
-  return providers
+  return providers as MediaRouterOptions["providers"]
 }
 
 function topLevelProviderInstances(
   options: BuiltinMediaRouterOptions,
 ): MediaRouterOptions["providers"] | undefined {
-  const entries = Object.entries(options).filter(([provider]) =>
-    isBuiltinProviderName(provider),
-  )
+  const entries = (Object.keys(builtinProviderEnvKeys) as BuiltinProviderName[])
+    .map((provider) => [provider, options[provider]] as const)
+    .filter(([, value]) => value !== undefined)
   return entries.length ? Object.fromEntries(entries) : undefined
 }
 

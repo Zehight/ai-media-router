@@ -1,11 +1,36 @@
 {
-  "name": "@media-router/client",
+  "name": "@miragari/client",
   "version": "0.1.0",
+  "description": "Client SDK for routing media generation requests across provider plugins.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "license": "UNLICENSED",
+  "author": "Zehight",
+  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "directory": "packages/client"
+  },
+  "bugs": {
+    "url": "https://github.com/Zehight/mediaRouter/issues"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "media-router",
+    "sdk",
+    "ai",
+    "image-generation",
+    "video-generation"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
@@ -14,12 +39,13 @@
     }
   },
   "scripts": {
+    "prepack": "pnpm --dir ../core run build && pnpm run build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:test": "tsc -p tsconfig.test.json",
     "test": "vitest run"
   },
   "dependencies": {
-    "@media-router/core": "workspace:*"
+    "@miragari/core": "workspace:*"
   }
 }

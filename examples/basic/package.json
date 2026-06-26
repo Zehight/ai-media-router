@@ -1,10 +1,10 @@
 {
-  "name": "@media-router/example-basic",
+  "name": "@miragari/example-basic",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@media-router/providers": "workspace:*"
+    "@miragari/providers": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2"

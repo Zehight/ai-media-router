@@ -1,4 +1,4 @@
-import { createMediaRouter } from "@media-router/providers"
+import { createMediaRouter } from "@miragari/providers"
 
 const client = createMediaRouter()
 

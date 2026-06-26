@@ -13,13 +13,13 @@ MediaRouter is a TypeScript-first SDK for normalizing media generation providers
 
 ## Packages
 
-- `@media-router/core`: shared protocol, provider plugin definitions, dimensions, errors, and validation.
-- `@media-router/client`: `MediaRouter` SDK, registry, wait/poll, image count splitting.
-- `@media-router/providers`: built-in OpenAI, Google, Qwen/Wan, HappyHorse, and Volcengine Ark provider plugins.
+- `@miragari/core`: shared protocol, provider plugin definitions, dimensions, errors, and validation.
+- `@miragari/client`: `MediaRouter` SDK, registry, wait/poll, image count splitting.
+- `@miragari/providers`: built-in OpenAI, Google, Qwen/Wan, HappyHorse, and Volcengine Ark provider plugins.
 
 ## Example
 
-Use `createMediaRouter()` from `@media-router/providers` when you want the
+Use `createMediaRouter()` from `@miragari/providers` when you want the
 built-in providers preinstalled. Provider entries can omit `plugin` when the
 provider key matches the built-in plugin key, such as `openai` or `qwen`.
 For built-in provider keys, the provider config can be just the API key string,
@@ -82,7 +82,7 @@ adding provider-specific logic to the router shell.
 Custom aliases such as `geminiProxy` should keep `plugin` explicit.
 
 ```ts
-import { createMediaRouter } from "@media-router/providers"
+import { createMediaRouter } from "@miragari/providers"
 
 const client = createMediaRouter("openai")
 
@@ -102,7 +102,7 @@ const client = createMediaRouter({
 For aliases, proxies, or profile-specific defaults, pass only the overrides:
 
 ```ts
-import { createMediaRouter } from "@media-router/providers"
+import { createMediaRouter } from "@miragari/providers"
 
 function requiredEnv(key: string): string {
   const value = process.env[key]

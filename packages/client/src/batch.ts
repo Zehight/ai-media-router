@@ -10,7 +10,7 @@ import {
   type ModelDefinition,
   type PartialFailureMode,
   type ProviderRuntimeContext,
-} from "@media-router/core"
+} from "@miragari/core"
 import { mapWithConcurrency } from "./concurrency.js"
 import type { NormalizedImageGenerationRequest } from "./normalize.js"
 import { normalizeTerminalJob } from "./terminal.js"

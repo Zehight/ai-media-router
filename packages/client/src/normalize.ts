@@ -8,7 +8,7 @@ import {
   type MediaType,
   type Model3DGenerationRequest,
   type VideoGenerationRequest,
-} from "@media-router/core"
+} from "@miragari/core"
 
 export type GenerationMediaType = Exclude<MediaType, "file">
 type ModelDefaults = Partial<Record<GenerationMediaType, string>>
@@ -193,7 +193,7 @@ export function normalizeGenerationRequest(
     return normalizeImageRequest({ prompt: input }, defaults)
   }
 
-  if (isStructuredRequest(input)) {
+  if (hasRequestInput(input)) {
     const profile = profileDefaults(defaults, profileName(input))
     const type = input.type ?? mediaType ?? profile?.type ?? "image"
     assertProfileMatchesType(profile, type, profileName(input))
@@ -223,7 +223,7 @@ export function normalizeImageRequest(
   }
   const profile = profileDefaults(defaults, profileName(input))
   assertProfileMatchesType(profile, "image", profileName(input))
-  if (isStructuredRequest(input)) {
+  if (hasRequestInput(input)) {
     assertInputMatchesType(input, "image")
     const request = omitIntentFields(input)
     return applyRequestDefaults(
@@ -232,38 +232,39 @@ export function normalizeImageRequest(
       profile,
     ) as NormalizedImageGenerationRequest
   }
+  const intent = input as ImageGenerationIntent
 
   const options = mergeDefinedRecords(
     resolvedOptions(defaults, "image", profile),
     {
-      width: input.width,
-      height: input.height,
-      count: input.count,
-      seed: input.seed,
-      quality: input.quality,
-      outputFormat: input.outputFormat,
+      width: intent.width,
+      height: intent.height,
+      count: intent.count,
+      seed: intent.seed,
+      quality: intent.quality,
+      outputFormat: intent.outputFormat,
     },
-    input.options,
+    intent.options,
   )
   const providerOptions = mergeDefinedRecords(
     resolvedProviderOptions(defaults, "image", profile),
-    input.providerOptions,
+    intent.providerOptions,
   )
 
   return stripUndefined({
     type: "image",
-    provider: requiredProvider(input.provider, defaults, "image", profile),
-    model: requiredModel(input.model, defaults, "image", profile),
-    action: input.action ?? profile?.action,
+    provider: requiredProvider(intent.provider, defaults, "image", profile),
+    model: requiredModel(intent.model, defaults, "image", profile),
+    action: intent.action ?? profile?.action,
     input: stripUndefined({
-      prompt: input.prompt,
-      negativePrompt: input.negativePrompt,
+      prompt: intent.prompt,
+      negativePrompt: intent.negativePrompt,
       images: mergeMediaInputGroups(
-        mediaFieldList(input.image),
-        mediaFields(input.images),
-        mediaInputs(input.media),
+        mediaFieldList(intent.image),
+        mediaFields(intent.images),
+        mediaInputs(intent.media),
       ),
-      mask: mediaField(input.mask),
+      mask: mediaField(intent.mask),
     }),
     options,
     providerOptions,
@@ -279,7 +280,7 @@ export function normalizeVideoRequest(
   }
   const profile = profileDefaults(defaults, profileName(input))
   assertProfileMatchesType(profile, "video", profileName(input))
-  if (isStructuredRequest(input)) {
+  if (hasRequestInput(input)) {
     assertInputMatchesType(input, "video")
     const request = omitIntentFields(input)
     return applyRequestDefaults(
@@ -288,48 +289,49 @@ export function normalizeVideoRequest(
       profile,
     ) as NormalizedVideoGenerationRequest
   }
+  const intent = input as VideoGenerationIntent
 
   const options = mergeDefinedRecords(
     resolvedOptions(defaults, "video", profile),
     {
-      width: input.width,
-      height: input.height,
-      duration: input.duration,
-      fps: input.fps,
-      seed: input.seed,
-      mode: input.mode,
-      quality: input.quality,
-      audioEnabled: input.audioEnabled,
+      width: intent.width,
+      height: intent.height,
+      duration: intent.duration,
+      fps: intent.fps,
+      seed: intent.seed,
+      mode: intent.mode,
+      quality: intent.quality,
+      audioEnabled: intent.audioEnabled,
     },
-    input.options,
+    intent.options,
   )
   const providerOptions = mergeDefinedRecords(
     resolvedProviderOptions(defaults, "video", profile),
-    input.providerOptions,
+    intent.providerOptions,
   )
-  const imageMedia = mediaInputsByKind(input.media, "image")
-  const videoMedia = mediaInputsByKind(input.media, "video")
-  const audioMedia = mediaInputsByKind(input.media, "audio")
+  const imageMedia = mediaInputsByKind(intent.media, "image")
+  const videoMedia = mediaInputsByKind(intent.media, "video")
+  const audioMedia = mediaInputsByKind(intent.media, "audio")
 
   return stripUndefined({
     type: "video",
-    provider: requiredProvider(input.provider, defaults, "video", profile),
-    model: requiredModel(input.model, defaults, "video", profile),
-    action: input.action ?? profile?.action,
+    provider: requiredProvider(intent.provider, defaults, "video", profile),
+    model: requiredModel(intent.model, defaults, "video", profile),
+    action: intent.action ?? profile?.action,
     input: stripUndefined({
-      prompt: input.prompt,
-      negativePrompt: input.negativePrompt,
-      image: mediaField(input.image),
-      firstFrame: mediaField(input.firstFrame),
-      lastFrame: mediaField(input.lastFrame),
-      images: mergeMediaInputs(mediaFields(input.images), imageMedia),
-      video: mediaField(input.video) ?? videoMedia?.[0],
+      prompt: intent.prompt,
+      negativePrompt: intent.negativePrompt,
+      image: mediaField(intent.image),
+      firstFrame: mediaField(intent.firstFrame),
+      lastFrame: mediaField(intent.lastFrame),
+      images: mergeMediaInputs(mediaFields(intent.images), imageMedia),
+      video: mediaField(intent.video) ?? videoMedia?.[0],
       videos: mergeMediaInputs(
-        mediaFields(input.videos),
-        input.video ? videoMedia : mediaTail(videoMedia),
+        mediaFields(intent.videos),
+        intent.video ? videoMedia : mediaTail(videoMedia),
       ),
-      audio: mediaField(input.audio),
-      audios: mergeMediaInputs(mediaFields(input.audios), audioMedia),
+      audio: mediaField(intent.audio),
+      audios: mergeMediaInputs(mediaFields(intent.audios), audioMedia),
     }),
     options,
     providerOptions,
@@ -345,7 +347,7 @@ export function normalizeAudioRequest(
   }
   const profile = profileDefaults(defaults, profileName(input))
   assertProfileMatchesType(profile, "audio", profileName(input))
-  if (isStructuredRequest(input)) {
+  if (hasRequestInput(input)) {
     assertInputMatchesType(input, "audio")
     const request = omitIntentFields(input)
     return applyRequestDefaults(
@@ -354,33 +356,34 @@ export function normalizeAudioRequest(
       profile,
     ) as NormalizedAudioGenerationRequest
   }
+  const intent = input as AudioGenerationIntent
 
   const options = mergeDefinedRecords(
     resolvedOptions(defaults, "audio", profile),
     {
-      duration: input.duration,
-      seed: input.seed,
-      voice: input.voice,
-      format: input.format,
-      sampleRate: input.sampleRate,
+      duration: intent.duration,
+      seed: intent.seed,
+      voice: intent.voice,
+      format: intent.format,
+      sampleRate: intent.sampleRate,
     },
-    input.options,
+    intent.options,
   )
   const providerOptions = mergeDefinedRecords(
     resolvedProviderOptions(defaults, "audio", profile),
-    input.providerOptions,
+    intent.providerOptions,
   )
 
   return stripUndefined({
     type: "audio",
-    provider: requiredProvider(input.provider, defaults, "audio", profile),
-    model: requiredModel(input.model, defaults, "audio", profile),
-    action: input.action ?? profile?.action,
+    provider: requiredProvider(intent.provider, defaults, "audio", profile),
+    model: requiredModel(intent.model, defaults, "audio", profile),
+    action: intent.action ?? profile?.action,
     input: stripUndefined({
-      prompt: input.prompt,
-      text: input.text,
-      audio: mediaField(input.audio),
-      audios: mergeMediaInputs(mediaFields(input.audios), mediaInputs(input.media)),
+      prompt: intent.prompt,
+      text: intent.text,
+      audio: mediaField(intent.audio),
+      audios: mergeMediaInputs(mediaFields(intent.audios), mediaInputs(intent.media)),
     }),
     options,
     providerOptions,
@@ -396,7 +399,7 @@ export function normalizeModel3DRequest(
   }
   const profile = profileDefaults(defaults, profileName(input))
   assertProfileMatchesType(profile, "model3d", profileName(input))
-  if (isStructuredRequest(input)) {
+  if (hasRequestInput(input)) {
     assertInputMatchesType(input, "model3d")
     const request = omitIntentFields(input)
     return applyRequestDefaults(
@@ -405,31 +408,32 @@ export function normalizeModel3DRequest(
       profile,
     ) as NormalizedModel3DGenerationRequest
   }
+  const intent = input as Model3DGenerationIntent
 
   const options = mergeDefinedRecords(
     resolvedOptions(defaults, "model3d", profile),
     {
-      format: input.format,
-      quality: input.quality,
-      texture: input.texture,
-      seed: input.seed,
+      format: intent.format,
+      quality: intent.quality,
+      texture: intent.texture,
+      seed: intent.seed,
     },
-    input.options,
+    intent.options,
   )
   const providerOptions = mergeDefinedRecords(
     resolvedProviderOptions(defaults, "model3d", profile),
-    input.providerOptions,
+    intent.providerOptions,
   )
 
   return stripUndefined({
     type: "model3d",
-    provider: requiredProvider(input.provider, defaults, "model3d", profile),
-    model: requiredModel(input.model, defaults, "model3d", profile),
-    action: input.action ?? profile?.action,
+    provider: requiredProvider(intent.provider, defaults, "model3d", profile),
+    model: requiredModel(intent.model, defaults, "model3d", profile),
+    action: intent.action ?? profile?.action,
     input: stripUndefined({
-      prompt: input.prompt,
-      images: mergeMediaInputs(mediaFields(input.images), mediaInputs(input.media)),
-      model: mediaField(input.sourceModel),
+      prompt: intent.prompt,
+      images: mergeMediaInputs(mediaFields(intent.images), mediaInputs(intent.media)),
+      model: mediaField(intent.sourceModel),
     }),
     options,
     providerOptions,
@@ -509,9 +513,9 @@ function applyRequestDefaults<T extends GenerationRequest>(
   }) as T & { profile?: never }
 }
 
-function isStructuredRequest(
+function hasRequestInput(
   input: Exclude<GenerationInput, string>,
-): input is Partial<GenerationRequest> & { input: unknown } {
+): input is StructuredGenerationInput & { input: unknown } {
   return "input" in input
 }
 
