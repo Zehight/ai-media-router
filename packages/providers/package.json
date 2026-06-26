@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": "Zehight",
   "homepage": "https://github.com/Zehight/mediaRouter#readme",
   "repository": {

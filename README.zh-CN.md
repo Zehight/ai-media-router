@@ -133,6 +133,6 @@ pnpm version-packages
 pnpm release:publish
 ```
 
-## 公开仓库提示
+## 许可证
 
-仓库的公开结构、文档和自动化已经补齐，但当前许可证仍然是 proprietary。正式对外开放复用前，建议你明确选择一个开源许可证。
+本项目采用 [MIT License](./LICENSE) 开源。

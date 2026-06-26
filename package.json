@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "TypeScript-first SDK for routing image and video generation across media providers.",
+  "license": "MIT",
   "homepage": "https://zehight.github.io/mediaRouter/",
   "repository": {
     "type": "git",

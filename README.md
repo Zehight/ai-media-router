@@ -133,6 +133,6 @@ pnpm version-packages
 pnpm release:publish
 ```
 
-## Public Repository Note
+## License
 
-This repository is structured for public consumption, but the current license file is still proprietary. Before opening the repository broadly for third-party reuse, choose an open-source license intentionally.
+This project is released under the [MIT License](./LICENSE).
