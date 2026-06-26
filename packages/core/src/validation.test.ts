@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { MediaRouterException } from "./errors.js"
 import type { ModelDefinition } from "./provider.js"
-import { inferModelMode, validateGenerationRequest } from "./validation.js"
+import { validateGenerationRequest } from "./validation.js"
 
 const imageModel: ModelDefinition = {
   id: "image-model",
   type: "image",
-  modes: ["text-to-image", "image-to-image"],
   async: false,
   capabilities: {
     count: { supported: false, max: 1, strategy: "split" },
@@ -17,7 +16,6 @@ const imageModel: ModelDefinition = {
 const videoModel: ModelDefinition = {
   id: "video-model",
   type: "video",
-  modes: ["text-to-video", "image-to-video"],
   async: true,
   capabilities: {
     durations: [5, 10],
@@ -25,42 +23,19 @@ const videoModel: ModelDefinition = {
     maxImages: 2,
     maxVideos: 0,
     supportsSeed: false,
-    supportsWebhook: false,
   },
 }
-
-describe("inferModelMode", () => {
-  it("infers text-to-image", () => {
-    expect(
-      inferModelMode({
-        provider: "p",
-        model: "m",
-        type: "image",
-        input: { prompt: "test" },
-      }),
-    ).toBe("text-to-image")
-  })
-
-  it("infers image-to-video from first frame", () => {
-    expect(
-      inferModelMode({
-        provider: "p",
-        model: "m",
-        type: "video",
-        input: {
-          prompt: "test",
-          firstFrame: { url: "https://example.com/a.png" },
-        },
-      }),
-    ).toBe("image-to-video")
-  })
-})
 
 describe("validateGenerationRequest", () => {
   it("rejects unknown models", () => {
     expect(() =>
       validateGenerationRequest({
-        request: { provider: "p", model: "missing", input: { prompt: "test" } },
+        request: {
+          provider: "p",
+          model: "missing",
+          type: "image",
+          input: { prompt: "test" },
+        },
       }),
     ).toThrow(MediaRouterException)
   })
@@ -79,6 +54,38 @@ describe("validateGenerationRequest", () => {
     ).toThrow(MediaRouterException)
   })
 
+  it("treats action as opaque provider facade input", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: imageModel,
+        request: {
+          provider: "p",
+          model: "image-model",
+          type: "image",
+          action: "provider-specific-edit",
+          input: { prompt: "test" },
+        },
+      }),
+    ).not.toThrow()
+  })
+
+  it("does not reject provider facade input combinations in core", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: imageModel,
+        request: {
+          provider: "p",
+          model: "image-model",
+          type: "image",
+          input: {
+            prompt: "test",
+            images: [{ url: "https://example.com/a.png" }],
+          },
+        },
+      }),
+    ).not.toThrow()
+  })
+
   it("allows split image counts above native max", () => {
     expect(() =>
       validateGenerationRequest({
@@ -94,6 +101,51 @@ describe("validateGenerationRequest", () => {
     ).not.toThrow()
   })
 
+  it("rejects non-integer image counts", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: imageModel,
+        request: {
+          provider: "p",
+          model: "image-model",
+          type: "image",
+          input: { prompt: "test" },
+          options: { count: 1.5 },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects non-finite image counts", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: imageModel,
+        request: {
+          provider: "p",
+          model: "image-model",
+          type: "image",
+          input: { prompt: "test" },
+          options: { count: Number.NaN },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects non-positive width", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: imageModel,
+        request: {
+          provider: "p",
+          model: "image-model",
+          type: "image",
+          input: { prompt: "test" },
+          options: { width: 0 },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
   it("rejects unsupported video options", () => {
     expect(() =>
       validateGenerationRequest({
@@ -104,6 +156,78 @@ describe("validateGenerationRequest", () => {
           type: "video",
           input: { prompt: "test" },
           options: { duration: 6 },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects unsupported video dimensions durations", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: {
+          ...videoModel,
+          capabilities: {
+            dimensions: {
+              video: {
+                durations: [5],
+              },
+            },
+          },
+        },
+        request: {
+          provider: "p",
+          model: "video-model",
+          type: "video",
+          input: { prompt: "test" },
+          options: { duration: 6 },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects durations above provider maxDuration", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: {
+          ...videoModel,
+          capabilities: {
+            dimensions: {
+              video: {
+                maxDuration: 5,
+              },
+            },
+          },
+        },
+        request: {
+          provider: "p",
+          model: "video-model",
+          type: "video",
+          input: { prompt: "test" },
+          options: { duration: 6 },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects non-positive video durations", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: {
+          ...videoModel,
+          capabilities: {
+            dimensions: {
+              video: {
+                maxDuration: 5,
+              },
+            },
+          },
+        },
+        request: {
+          provider: "p",
+          model: "video-model",
+          type: "video",
+          input: { prompt: "test" },
+          options: { duration: 0 },
         },
       }),
     ).toThrow(MediaRouterException)
@@ -127,5 +251,45 @@ describe("validateGenerationRequest", () => {
         },
       }),
     ).toThrow(MediaRouterException)
+  })
+
+  it("allows audio requests through basic validation", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: {
+          id: "audio-model",
+          type: "audio",
+          async: false,
+        },
+        request: {
+          provider: "p",
+          model: "audio-model",
+          type: "audio",
+          action: "voiceover",
+          input: { text: "hello" },
+          options: { duration: 5, sampleRate: 44100 },
+        },
+      }),
+    ).not.toThrow()
+  })
+
+  it("allows model3d requests through basic validation", () => {
+    expect(() =>
+      validateGenerationRequest({
+        model: {
+          id: "model3d-model",
+          type: "model3d",
+          async: false,
+        },
+        request: {
+          provider: "p",
+          model: "model3d-model",
+          type: "model3d",
+          action: "text-to-3d",
+          input: { prompt: "chair" },
+          options: { format: "glb", texture: true },
+        },
+      }),
+    ).not.toThrow()
   })
 })

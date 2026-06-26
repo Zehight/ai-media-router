@@ -3,9 +3,13 @@ import {
   defineHttpProvider,
 } from "../http.js"
 import {
+  assertNoUnusedMediaInputs,
   describeMediaInput,
   getImageInputs,
   mediaInputToInlineBase64,
+  requirePrompt,
+  unsupportedAction,
+  unsupportedInput,
 } from "../toolkit.js"
 import { googleModels } from "./definition.js"
 
@@ -26,6 +30,9 @@ export const googleProvider = defineHttpProvider<GoogleResponse>({
   displayName: "Google GenAI",
   baseURL: "https://generativelanguage.googleapis.com/v1beta",
   auth: { type: "api-key", in: "query", query: "key" },
+  defaultModels: {
+    image: "gemini-2.5-flash-image",
+  },
   models: googleModels,
   create: {
     request: {
@@ -34,13 +41,25 @@ export const googleProvider = defineHttpProvider<GoogleResponse>({
         googleGeneratePath(context.config.options, context.request.model),
       body: (context) => {
         const dimensions = context.resolved.dimensions
+        const images = getImageInputs(context.request)
+        if (
+          context.request.action &&
+          context.request.action !== "generate" &&
+          context.request.action !== "reference"
+        ) {
+          unsupportedAction(context)
+        }
+        if (context.request.action === "reference" && !images.length) {
+          unsupportedInput(context, "input.images", "reference action requires images")
+        }
+        assertNoUnusedMediaInputs(context, ["referenceImage"])
         return {
           contents: [
             {
               role: "user",
               parts: [
-                { text: context.request.input.prompt },
-                ...getImageInputs(context.request).map(googleMediaPart),
+                { text: requirePrompt(context) },
+                ...images.map(googleMediaPart),
               ],
             },
           ],

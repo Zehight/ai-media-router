@@ -1,13 +1,5 @@
 export {
-  completed,
   defineHttpProvider,
-  pendingJob,
-  pendingProviderJob,
-  pendingStatus,
-  polledJob,
-  providerError,
-  statusFrom,
-  stripUndefined,
 } from "./http.js"
 export type { HttpProviderDefinition } from "./http.js"
 export type {
@@ -17,45 +9,69 @@ export type {
   HttpOutputHelpers,
   HttpPollRequestSpec,
   HttpResponseParseInput,
-  MissingStatusStrategy,
-  UnknownStatusStrategy,
 } from "./http.js"
 export {
   appendPromptFlags,
   assetFromUrl,
   assetsFromImageData,
+  assertNoUnusedMediaInputs,
+  badRequest,
   collectMediaInputs,
+  completed,
+  completedResult,
   describeMediaInput,
   firstDefined,
   firstImageInput,
   firstMediaInput,
   getAudioInputs,
   getImageInputs,
+  getModel3DInputs,
   getOutputMimeType,
   getPrompt,
+  getProviderOption,
   getVideoInputs,
   isImageRequest,
   isVideoRequest,
   mediaInputToInlineBase64,
+  pendingJob,
+  pendingProviderJob,
+  pendingStatus,
+  polledJob,
+  providerAsset,
+  providerAssets,
+  providerError,
+  requestIntent,
   requestMediaType,
+  requirePrompt,
+  statusFrom,
+  stripUndefined,
+  unsupportedAction,
+  unsupportedInput,
 } from "./toolkit.js"
 export type {
   CollectedMediaInput,
   DescribedMediaInput,
   InlineBase64MediaInput,
+  MissingStatusStrategy,
   MediaInputRole,
+  ProviderAssetInput,
+  ProviderRequestIntent,
+  UnknownStatusStrategy,
 } from "./toolkit.js"
+export {
+  createMediaRouter,
+} from "./media-router.js"
+export type {
+  BuiltinMediaRouterInput,
+  BuiltinMediaRouterDefaultSlot,
+  BuiltinMediaRouterOptions,
+  BuiltinMediaRouterProfileInput,
+  BuiltinMediaRouterProfiles,
+  BuiltinProviderName,
+} from "./media-router.js"
 export { googleProvider } from "./google/index.js"
+export { happyhorseProvider } from "./happyhorse/index.js"
 export { openaiProvider } from "./openai/index.js"
+export { qwenProvider } from "./qwen/index.js"
 export { volcengineProvider } from "./volcengine/index.js"
-
-import type { ProviderPlugin } from "@media-router/core"
-import { googleProvider } from "./google/index.js"
-import { openaiProvider } from "./openai/index.js"
-import { volcengineProvider } from "./volcengine/index.js"
-
-export const builtinProviderPlugins = {
-  openai: openaiProvider,
-  google: googleProvider,
-  volcengine: volcengineProvider,
-} satisfies Record<string, ProviderPlugin>
+export { builtinProviderPlugins } from "./builtin.js"

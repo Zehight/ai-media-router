@@ -31,14 +31,12 @@ const provider = defineHttpProvider<
     image: {
       id: "image",
       type: "image",
-      modes: ["text-to-image"],
       async: false,
       capabilities: { count: { supported: true, max: 2, strategy: "native" } },
     },
     video: {
       id: "video",
       type: "video",
-      modes: ["text-to-video"],
       async: true,
     },
   },
@@ -87,6 +85,33 @@ const provider = defineHttpProvider<
 })
 
 describe("defineHttpProvider", () => {
+  it("passes provider-declared default models through plugin creation", () => {
+    const plugin = defineHttpProvider({
+      id: "defaults",
+      displayName: "Defaults",
+      defaultModels: {
+        image: "preferred-image",
+      },
+      models: {
+        "preferred-image": {
+          id: "preferred-image",
+          type: "image",
+          async: false,
+        },
+      },
+      create: {
+        request: { path: "/images" },
+        output: (_response, context) =>
+          completed({
+            context,
+            assets: [{ type: "image", url: "https://example.com/image.png" }],
+          }),
+      },
+    })
+
+    expect(plugin.defaultModels).toEqual({ image: "preferred-image" })
+  })
+
   it("maps a synchronous image response", async () => {
     const calls: Array<{ url: string; init: RequestInit }> = []
     const fetch = async (url: URL | RequestInfo, init?: RequestInit) => {
@@ -332,7 +357,6 @@ describe("defineHttpProvider", () => {
         video: {
           id: "video",
           type: "video",
-          modes: ["text-to-video"],
           async: true,
         },
       },
@@ -527,7 +551,6 @@ describe("defineHttpProvider", () => {
         video: {
           id: "video",
           type: "video",
-          modes: ["text-to-video"],
           async: true,
         },
       },
@@ -591,7 +614,6 @@ describe("defineHttpProvider", () => {
         video: {
           id: "video",
           type: "video",
-          modes: ["text-to-video"],
           async: true,
         },
       },
@@ -653,7 +675,6 @@ describe("defineHttpProvider", () => {
         image: {
           id: "image",
           type: "image",
-          modes: ["text-to-image"],
           async: false,
         },
       },
@@ -714,7 +735,6 @@ describe("defineHttpProvider", () => {
         image: {
           id: "image",
           type: "image",
-          modes: ["text-to-image"],
           async: false,
         },
       },
@@ -850,7 +870,6 @@ describe("defineHttpProvider", () => {
         image: {
           id: "image",
           type: "image",
-          modes: ["text-to-image"],
           async: false,
         },
       },
@@ -905,7 +924,6 @@ describe("defineHttpProvider", () => {
         image: {
           id: "image",
           type: "image",
-          modes: ["text-to-image"],
           async: false,
         },
       },
@@ -954,7 +972,6 @@ describe("defineHttpProvider", () => {
         video: {
           id: "video",
           type: "video",
-          modes: ["text-to-video"],
           async: true,
         },
       },

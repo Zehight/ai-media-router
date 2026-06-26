@@ -64,6 +64,38 @@ describe("waitForJob error normalization", () => {
     })
   })
 
+  it("fails succeeded jobs without results instead of timing out", async () => {
+    await expect(
+      waitForJob({
+        job: baseJob,
+        runtime: runtime({
+          poll: async () => ({
+            ...baseJob,
+            status: "succeeded",
+          }),
+        }),
+        options: { timeoutMs: 100, intervalMs: 1 },
+      }),
+    ).rejects.toMatchObject({
+      details: {
+        code: "PROVIDER_ERROR",
+        message: "Succeeded job is missing result",
+      },
+    })
+  })
+
+  it("adds a primary asset when waiting an already completed job", async () => {
+    const result = await waitForJob({
+      job: completedChild("job_1", "provider_job_1"),
+      runtime: runtime({}),
+    })
+
+    expect(result.asset).toMatchObject({
+      type: "image",
+      url: "https://cdn.example.com/job_1.png",
+    })
+  })
+
   it("keeps batch child provider job ids and result timings", async () => {
     const result = await waitForJob({
       job: {
@@ -83,6 +115,86 @@ describe("waitForJob error normalization", () => {
     ])
     expect(result.timings?.createdAt).toBeTruthy()
     expect(result.timings?.completedAt).toBeTruthy()
+  })
+
+  it("waits batch children with their own provider runtime", async () => {
+    const polledProviders: string[] = []
+    const batchJob: GenerationJob = {
+      ...baseJob,
+      id: "batch_1",
+      children: [
+        { ...baseJob, id: "child_1", status: "running" },
+        {
+          ...baseJob,
+          id: "child_2",
+          provider: "otherProxy",
+          providerId: "other",
+          status: "running",
+        },
+      ],
+    }
+
+    const result = await waitForJob({
+      job: batchJob,
+      runtime: runtime({
+        poll: async () => {
+          throw new Error("parent runtime should not poll batch children")
+        },
+      }),
+      resolveProvider: (provider) =>
+        runtime(
+          {
+            poll: async (context) => {
+              polledProviders.push(context.provider)
+              return succeededJob(context.job, context.provider, context.providerId)
+            },
+          },
+          provider,
+          provider === "otherProxy" ? "other" : "custom",
+        ),
+    })
+
+    expect(polledProviders.sort()).toEqual(["customProxy", "otherProxy"])
+    expect(result.children).toMatchObject([
+      { jobId: "child_1", status: "succeeded" },
+      { jobId: "child_2", status: "succeeded" },
+    ])
+  })
+
+  it("preserves batch child resolver error messages in partial failure mode", async () => {
+    const result = await waitForJob({
+      job: {
+        ...baseJob,
+        id: "batch_1",
+        providerState: { partialFailure: "return-successful" },
+        children: [
+          completedChild("child_1", "provider_child_1"),
+          {
+            ...baseJob,
+            id: "child_2",
+            provider: "missingProxy",
+            status: "running",
+          },
+        ],
+      },
+      runtime: runtime({}),
+      resolveProvider: (provider) => {
+        throw new Error(`Unknown provider: ${provider}`)
+      },
+    })
+
+    expect(result.children).toMatchObject([
+      { jobId: "child_1", status: "succeeded" },
+      {
+        jobId: "child_2",
+        status: "failed",
+        error: {
+          code: "UNKNOWN",
+          message: "Unknown provider: missingProxy",
+          provider: "missingProxy",
+        },
+      },
+    ])
   })
 
   it("returns successful batch assets with failed children in partial failure mode", async () => {
@@ -110,6 +222,10 @@ describe("waitForJob error normalization", () => {
     })
 
     expect(result.assets).toHaveLength(1)
+    expect(result.asset).toMatchObject({
+      type: "image",
+      url: "https://cdn.example.com/child_1.png",
+    })
     expect(result.children).toMatchObject([
       { jobId: "child_1", status: "succeeded" },
       { jobId: "child_2", status: "failed", error: failedError },
@@ -159,7 +275,7 @@ describe("waitForJob error normalization", () => {
             })
           },
         }),
-        options: { timeoutMs: 1, intervalMs: 1 },
+        options: { timeoutMs: 100, intervalMs: 1 },
       }),
     ).rejects.toMatchObject({
       details: {
@@ -187,7 +303,7 @@ describe("waitForJob error normalization", () => {
             } as never,
           }),
         }),
-        options: { timeoutMs: 1, intervalMs: 1 },
+        options: { timeoutMs: 100, intervalMs: 1 },
       }),
     ).rejects.toMatchObject({
       details: {
@@ -215,7 +331,7 @@ describe("waitForJob error normalization", () => {
             }),
           }),
         }),
-        options: { timeoutMs: 1, intervalMs: 1 },
+        options: { timeoutMs: 100, intervalMs: 1 },
       }),
     ).rejects.toMatchObject({
       details: {
@@ -253,15 +369,41 @@ function completedChild(id: string, providerJobId: string): GenerationJob {
   }
 }
 
-function runtime(driver: Partial<ProviderPlugin["driver"]>): ProviderRuntimeContext {
+function succeededJob(
+  job: GenerationJob,
+  provider: string,
+  providerId: string,
+): GenerationJob {
+  return {
+    ...job,
+    provider,
+    providerId,
+    status: "succeeded",
+    result: {
+      id: `${job.id}_result`,
+      jobId: job.id,
+      type: job.type,
+      provider,
+      providerId,
+      model: job.model,
+      status: "succeeded",
+      assets: [{ type: job.type, url: `https://cdn.example.com/${job.id}` }],
+    },
+  }
+}
+
+function runtime(
+  driver: Partial<ProviderPlugin["driver"]>,
+  provider = "customProxy",
+  providerId = "custom",
+): ProviderRuntimeContext {
   const plugin: ProviderPlugin = {
-    id: "custom",
+    id: providerId,
     displayName: "Custom",
     models: {
       image: {
         id: "image",
         type: "image",
-        modes: ["text-to-image"],
         async: true,
       },
     },
@@ -273,10 +415,10 @@ function runtime(driver: Partial<ProviderPlugin["driver"]>): ProviderRuntimeCont
     },
   }
   return {
-    provider: "customProxy",
-    providerId: "custom",
+    provider,
+    providerId,
     plugin,
-    config: { plugin: "custom" },
+    config: { plugin: providerId },
     fetch: globalThis.fetch,
     resolved: {},
   }

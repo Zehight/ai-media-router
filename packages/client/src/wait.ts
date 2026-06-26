@@ -8,12 +8,17 @@ import {
   type PartialFailureMode,
   type ProviderRuntimeContext,
 } from "@media-router/core"
+import { reduceBatchTerminalJob } from "./batch.js"
+import { normalizeProviderJob } from "./provider-output.js"
+import { normalizeFailedJobError, resolveTerminalResult } from "./terminal.js"
 
 export type WaitOptions = {
   timeoutMs?: number
   intervalMs?: number
   onProgress?: (job: GenerationJob) => void
 }
+
+export type WaitRuntimeResolver = (provider: string) => ProviderRuntimeContext
 
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000
 const DEFAULT_INTERVAL_MS = 5 * 1000
@@ -28,7 +33,8 @@ function normalizeDelayMs(delayMs: number | undefined, fallbackMs: number): numb
 
 export async function waitForJob(input: {
   job: GenerationJob
-  runtime: ProviderRuntimeContext
+  runtime?: ProviderRuntimeContext
+  resolveProvider?: WaitRuntimeResolver
   options?: WaitOptions
 }): Promise<GenerationResult> {
   const timeoutMs = input.options?.timeoutMs ?? DEFAULT_TIMEOUT_MS
@@ -36,20 +42,20 @@ export async function waitForJob(input: {
   const started = Date.now()
   let job = input.job
 
-  if (job.status === "succeeded" && job.result) return job.result
-  if (job.status === "failed") {
-    throw new MediaRouterException(normalizeFailedJobError(job))
+  if (job.status === "failed" || job.status === "cancelled") {
+    resolveTerminalResult(job)
   }
-  if (job.status === "cancelled") {
+  if (job.children?.length) return waitForBatchJob({ ...input, job })
+  const initialResult = resolveTerminalResult(job)
+  if (initialResult) return initialResult
+  if (!input.runtime) {
     throw new MediaRouterException(
-      createMediaRouterError("PROVIDER_ERROR", "Generation was cancelled", {
+      createMediaRouterError("BAD_REQUEST", "Provider runtime is required", {
         provider: job.provider,
         model: job.model,
-        raw: job.raw,
       }),
     )
   }
-  if (job.children?.length) return waitForBatchJob({ ...input, job })
   if (!input.runtime.plugin.driver.poll) {
     throw new MediaRouterException(
       createMediaRouterError("BAD_REQUEST", "Provider does not support status polling", {
@@ -61,7 +67,15 @@ export async function waitForJob(input: {
 
   while (Date.now() - started < timeoutMs) {
     try {
-      job = await input.runtime.plugin.driver.poll({ ...input.runtime, job })
+      job = normalizeProviderJob(
+        await input.runtime.plugin.driver.poll({ ...input.runtime, job }),
+        {
+          provider: job.provider,
+          providerId: job.providerId,
+          model: job.model,
+          type: job.type,
+        },
+      )
     } catch (error) {
       if (Date.now() - started >= timeoutMs) break
       throw new MediaRouterException(normalizePollError(error, input.runtime, job))
@@ -69,19 +83,8 @@ export async function waitForJob(input: {
     if (Date.now() - started >= timeoutMs) break
     input.options?.onProgress?.(job)
 
-    if (job.status === "succeeded" && job.result) return job.result
-    if (job.status === "failed") {
-      throw new MediaRouterException(normalizeFailedJobError(job))
-    }
-    if (job.status === "cancelled") {
-      throw new MediaRouterException(
-        createMediaRouterError("PROVIDER_ERROR", "Generation was cancelled", {
-          provider: job.provider,
-          model: job.model,
-          raw: job.raw,
-        }),
-      )
-    }
+    const result = resolveTerminalResult(job)
+    if (result) return result
 
     const remainingMs = timeoutMs - (Date.now() - started)
     if (remainingMs <= 0) break
@@ -95,32 +98,6 @@ export async function waitForJob(input: {
       retryable: true,
     }),
   )
-}
-
-function normalizeFailedJobError(job: GenerationJob): MediaRouterError {
-  if (!job.error) {
-    return createMediaRouterError("PROVIDER_ERROR", "Generation failed", {
-      provider: job.provider,
-      model: job.model,
-      raw: job.raw,
-    })
-  }
-  const normalized = normalizeMediaRouterError(job.error, {
-    provider: job.provider,
-    model: job.model,
-  })
-  if (normalized) {
-    return {
-      ...normalized,
-      provider: job.provider,
-      model: job.model,
-    }
-  }
-  return createMediaRouterError("UNKNOWN", "Unknown provider error", {
-    provider: job.provider,
-    model: job.model,
-    raw: job.error,
-  })
 }
 
 function normalizePollError(
@@ -168,68 +145,73 @@ function errorMessage(error: unknown): string {
 
 async function waitForBatchJob(input: {
   job: GenerationJob
-  runtime: ProviderRuntimeContext
+  runtime?: ProviderRuntimeContext
+  resolveProvider?: WaitRuntimeResolver
   options?: WaitOptions
 }): Promise<GenerationResult> {
   const children = input.job.children ?? []
   const partialFailure = partialFailureMode(input.job)
   const settled = await Promise.all(
-    children.map((child) =>
-      waitForJob({ job: child, runtime: input.runtime, options: input.options })
-        .then((result) => ({ child, result }))
-        .catch((error) => {
-          const normalized = normalizeMediaRouterError(error, {
-            provider: child.provider,
-            model: child.model,
-          }) ?? normalizeFailedJobError({
-            ...child,
-            status: "failed",
-            error: child.error,
-            raw: error,
-          })
-          if (partialFailure === "fail") throw new MediaRouterException(normalized)
-          return { child, error: normalized }
-        }),
+    children.map(async (child) => {
+      try {
+        const runtime =
+          child.status === "queued" || child.status === "running"
+            ? input.resolveProvider?.(child.provider) ?? input.runtime
+            : input.runtime
+        const result = await waitForJob({
+          job: child,
+          runtime,
+          resolveProvider: input.resolveProvider,
+          options: input.options,
+        })
+        return { child, result }
+      } catch (error) {
+        const normalized = normalizeBatchChildError(error, child)
+        if (partialFailure === "fail") throw new MediaRouterException(normalized)
+        return { child, error: normalized }
+      }
+    }),
+  )
+  const completedAt = new Date().toISOString()
+  const reduced = reduceBatchTerminalJob({
+    job: input.job,
+    children: settled.map((item) =>
+      "result" in item
+        ? { ...item.child, status: "succeeded", result: item.result }
+        : { ...item.child, status: "failed", error: item.error },
     ),
-  )
-  const successful = settled.filter(
-    (item): item is { child: GenerationJob; result: GenerationResult } =>
-      "result" in item,
-  )
-  if (partialFailure === "return-successful" && successful.length === 0) {
-    throw new MediaRouterException(
-      createMediaRouterError("PROVIDER_ERROR", "All batch children failed", {
+    completedAt,
+    partialFailure,
+    failureMessage:
+      partialFailure === "return-successful"
+        ? "All batch children failed"
+        : "Batch completed without successful assets",
+  })
+  if (reduced.status === "succeeded" && reduced.result) return reduced.result
+  throw new MediaRouterException(
+    reduced.error ??
+      createMediaRouterError("PROVIDER_ERROR", "Batch completed without successful assets", {
         provider: input.job.provider,
         model: input.job.model,
         raw: settled,
       }),
-    )
-  }
-  const completedAt = new Date().toISOString()
-  return {
-    id: `${input.job.id}_result`,
-    jobId: input.job.id,
-    type: input.job.type,
-    provider: input.job.provider,
-    providerId: input.job.providerId,
-    model: input.job.model,
-    status: "succeeded",
-    assets: successful.flatMap((item) => item.result.assets),
-    children: settled.map((item) => ({
-      jobId: item.child.id,
-      providerJobId: item.child.providerJobId,
-      status: "result" in item ? "succeeded" : "failed",
-      error: "error" in item ? item.error : undefined,
-    })),
-    timings: {
-      createdAt: input.job.createdAt ?? completedAt,
-      completedAt,
-    },
-  }
+  )
 }
 
 function partialFailureMode(job: GenerationJob): PartialFailureMode {
   return job.providerState?.partialFailure === "return-successful"
     ? "return-successful"
     : "fail"
+}
+
+function normalizeBatchChildError(error: unknown, child: GenerationJob): MediaRouterError {
+  const fallback = { provider: child.provider, model: child.model }
+  const normalized = normalizeMediaRouterError(error, fallback)
+  if (normalized) return normalized
+  if (child.error) return normalizeFailedJobError({ ...child, status: "failed" })
+  return createMediaRouterError("UNKNOWN", errorMessage(error), {
+    provider: child.provider,
+    model: child.model,
+    raw: error,
+  })
 }

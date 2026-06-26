@@ -70,4 +70,69 @@ describe("googleProvider", () => {
     })
     harness.expectAllResponsesUsed()
   })
+
+  it("requires images for reference action and rejects masks", async () => {
+    const harness = createProviderHarness({
+      plugin: googleProvider,
+      provider: "googleProxy",
+      responses: [],
+    })
+
+    await expect(
+      googleProvider.driver.create(
+        harness.createContext({
+          provider: "googleProxy",
+          model: "gemini-2.5-flash-image",
+          type: "image",
+          action: "reference",
+          input: { prompt: "test" },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("reference action requires images"),
+    })
+
+    await expect(
+      googleProvider.driver.create(
+        harness.createContext({
+          provider: "googleProxy",
+          model: "gemini-2.5-flash-image",
+          type: "image",
+          input: {
+            prompt: "test",
+            mask: { url: "https://example.com/mask.png" },
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("input.mask"),
+    })
+    harness.expectFetchCount(0)
+  })
+
+  it("rejects unsupported image actions", async () => {
+    const harness = createProviderHarness({
+      plugin: googleProvider,
+      provider: "googleProxy",
+      responses: [],
+    })
+
+    await expect(
+      googleProvider.driver.create(
+        harness.createContext({
+          provider: "googleProxy",
+          model: "gemini-2.5-flash-image",
+          type: "image",
+          action: "edit",
+          input: { prompt: "test" },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Unsupported action: edit",
+    })
+    harness.expectFetchCount(0)
+  })
 })

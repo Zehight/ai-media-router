@@ -1,15 +1,9 @@
 import {
-  createId,
   createMediaRouterError,
   defineProvider,
-  normalizeMediaRouterError,
-  mapProviderStatus,
   type GenerationJob,
-  type GenerationRequest,
-  type GenerationResult,
   type GenerationStatus,
   type MediaRouterErrorCode,
-  type MediaAsset,
   type ModelDefinition,
   type ProviderCancelContext,
   type ProviderCreateContext,
@@ -18,6 +12,25 @@ import {
   type ProviderPollContext,
   type ProviderRuntimeContext,
 } from "@media-router/core"
+import {
+  providerError,
+  statusFrom,
+  type MissingStatusStrategy,
+  type UnknownStatusStrategy,
+} from "./toolkit.js"
+
+export {
+  completed,
+  completedResult,
+  pendingJob,
+  pendingProviderJob,
+  pendingStatus,
+  polledJob,
+  providerError,
+  statusFrom,
+  stripUndefined,
+} from "./toolkit.js"
+export type { MissingStatusStrategy, UnknownStatusStrategy } from "./toolkit.js"
 
 export type BodySerializationInput<TContext> = {
   body: unknown
@@ -28,9 +41,6 @@ type HttpRuntimeContext =
   | ProviderCreateContext
   | ProviderPollContext
   | ProviderCancelContext
-
-export type UnknownStatusStrategy = "running" | "failed" | "throw"
-export type MissingStatusStrategy = "running" | "throw"
 
 export type HttpRequestSpec<TContext> = {
   method?: "GET" | "POST" | "DELETE"
@@ -80,6 +90,7 @@ export type HttpProviderDefinition<
   displayName: string
   baseURL?: string
   auth?: ProviderPlugin["auth"]
+  defaultModels?: ProviderPlugin["defaultModels"]
   models: Record<string, ModelDefinition>
   statusMap?: Record<string, GenerationStatus>
   unknownStatus?: UnknownStatusStrategy
@@ -98,7 +109,7 @@ export type HttpProviderDefinition<
       response: TPollResponse,
       context: ProviderPollContext,
       helpers: HttpOutputHelpers,
-    ) => GenerationJob
+    ) => GenerationJob | Promise<GenerationJob>
   }
   cancel?: {
     request: HttpCancelRequestSpec
@@ -125,6 +136,7 @@ export function defineHttpProvider<
     displayName: definition.displayName,
     baseURL: definition.baseURL,
     auth: definition.auth,
+    defaultModels: definition.defaultModels,
     models: definition.models,
     driver: {
       async create(context) {
@@ -407,340 +419,6 @@ function errorCodeFromStatus(
 
 function retryableFromStatus(status: number): boolean {
   return status === 408 || status === 409 || status === 425 || status === 429 || status >= 500
-}
-
-export function completedResult(input: {
-  context: ProviderCreateContext
-  assets: MediaAsset[]
-  raw?: unknown
-  providerRequest?: unknown
-  allowEmptyResult?: boolean
-}): GenerationResult {
-  assertOutputAssets({
-    assets: input.assets,
-    allowEmptyResult: input.allowEmptyResult,
-    provider: input.context.provider,
-    model: input.context.request.model,
-    raw: input.raw,
-  })
-  const jobId = createId("mr_job")
-  const completedAt = new Date().toISOString()
-  return {
-    id: createId("mr_result"),
-    jobId,
-    type: input.context.request.type ?? input.context.model.type,
-    provider: input.context.provider,
-    providerId: input.context.providerId,
-    model: input.context.request.model,
-    status: "succeeded",
-    assets: input.assets,
-    raw: input.raw,
-    resolved: {
-      dimensions: input.context.resolved.dimensions,
-      providerRequest: input.providerRequest,
-    },
-    timings: {
-      createdAt: completedAt,
-      completedAt,
-    },
-  }
-}
-
-export function completed(input: {
-  context: ProviderCreateContext
-  assets: MediaAsset[]
-  raw?: unknown
-  providerRequest?: unknown
-  allowEmptyResult?: boolean
-}): ProviderCreateOutput {
-  return { kind: "completed", result: completedResult(input) }
-}
-
-export function pendingJob(input: {
-  context: ProviderCreateContext
-  providerJobId?: string
-  providerState?: Record<string, unknown>
-  status?: GenerationStatus
-  raw?: unknown
-  pollAfterMs?: number
-  providerRequest?: unknown
-}): ProviderCreateOutput {
-  assertPendingStatus({
-    status: input.status,
-    provider: input.context.provider,
-    model: input.context.request.model,
-    raw: input.raw,
-  })
-  return {
-    kind: "pending",
-    job: {
-      id: createId("mr_job"),
-      type: input.context.request.type ?? input.context.model.type,
-      provider: input.context.provider,
-      providerId: input.context.providerId,
-      model: input.context.request.model,
-      status: input.status ?? "queued",
-      providerJobId: input.providerJobId,
-      providerState: input.providerState,
-      raw: input.raw,
-      pollAfterMs: normalizePollAfterMs(input.pollAfterMs),
-      createdAt: new Date().toISOString(),
-      resolved: {
-        dimensions: input.context.resolved.dimensions,
-        providerRequest: input.providerRequest,
-      },
-    },
-  }
-}
-
-export function pendingProviderJob(input: {
-  context: ProviderCreateContext
-  providerJobId: string | undefined
-  providerState?: Record<string, unknown>
-  status?: GenerationStatus
-  raw?: unknown
-  pollAfterMs?: number
-  providerRequest?: unknown
-}): ProviderCreateOutput {
-  if (!input.providerJobId) {
-    throw createMediaRouterError("PROVIDER_ERROR", "Provider did not return a job id", {
-      provider: input.context.provider,
-      model: input.context.request.model,
-      raw: input.raw,
-    })
-  }
-  return pendingJob({
-    ...input,
-    providerJobId: input.providerJobId,
-  })
-}
-
-export function pendingStatus(
-  status: GenerationStatus | undefined,
-  fallback: "queued" | "running" = "queued",
-): "queued" | "running" {
-  if (!status) return fallback
-  if (status === "queued" || status === "running") return status
-  throw new Error(
-    `Provider create returned terminal status "${status}"; return completed() or throw an error instead`,
-  )
-}
-
-export function polledJob(input: {
-  context: ProviderPollContext
-  status: GenerationStatus
-  assets?: MediaAsset[]
-  raw?: unknown
-  error?: GenerationJob["error"]
-  providerState?: Record<string, unknown>
-  allowEmptyResult?: boolean
-  pollAfterMs?: number
-}): GenerationJob {
-  const assets = input.assets ?? (input.allowEmptyResult ? [] : undefined)
-
-  if (input.status === "succeeded") {
-    assertOutputAssets({
-      assets,
-      allowEmptyResult: input.allowEmptyResult,
-      provider: input.context.job.provider,
-      model: input.context.job.model,
-      raw: input.raw,
-    })
-  }
-  if (input.status === "failed" && !input.error) {
-    throw createMediaRouterError(
-      "PROVIDER_ERROR",
-      "Provider reported failure without error details",
-      {
-        provider: input.context.job.provider,
-        model: input.context.job.model,
-        raw: input.raw,
-      },
-    )
-  }
-  const normalizedError =
-    input.status === "failed"
-      ? normalizeMediaRouterError(input.error, {
-          provider: input.context.job.provider,
-          model: input.context.job.model,
-        })
-      : undefined
-  const jobError = normalizedError
-    ? {
-        ...normalizedError,
-        provider: input.context.job.provider,
-        model: input.context.job.model,
-      }
-    : undefined
-  if (input.status === "failed" && !normalizedError) {
-    throw createMediaRouterError(
-      "PROVIDER_ERROR",
-      "Provider reported failure with invalid error details",
-      {
-        provider: input.context.job.provider,
-        model: input.context.job.model,
-        raw: input.error,
-      },
-    )
-  }
-
-  const updatedAt = new Date().toISOString()
-  const result =
-    input.status === "succeeded" && assets
-      ? {
-          id: createId("mr_result"),
-          jobId: input.context.job.id,
-          type: input.context.job.type,
-          provider: input.context.job.provider,
-          providerId: input.context.job.providerId,
-          model: input.context.job.model,
-          status: "succeeded" as const,
-          assets,
-          raw: input.raw,
-          resolved: input.context.job.resolved,
-          timings: {
-            createdAt: input.context.job.createdAt ?? updatedAt,
-            completedAt: updatedAt,
-          },
-        }
-      : undefined
-
-  return {
-    ...input.context.job,
-    status: input.status,
-    result,
-    error: jobError,
-    providerState: mergeProviderState(
-      input.context.job.providerState,
-      input.providerState,
-    ),
-    raw: input.raw,
-    pollAfterMs:
-      normalizePollAfterMs(input.pollAfterMs) ?? input.context.job.pollAfterMs,
-    updatedAt,
-  }
-}
-
-function normalizePollAfterMs(pollAfterMs: number | undefined): number | undefined {
-  if (pollAfterMs == null) return undefined
-  if (!Number.isFinite(pollAfterMs) || pollAfterMs < 0) return undefined
-  return pollAfterMs
-}
-
-function assertPendingStatus(input: {
-  status: GenerationStatus | undefined
-  provider: string
-  model: string
-  raw: unknown
-}): void {
-  if (!input.status || input.status === "queued" || input.status === "running") return
-  throw createMediaRouterError(
-    "PROVIDER_ERROR",
-    "Pending jobs must be queued or running",
-    {
-      provider: input.provider,
-      model: input.model,
-      raw: input.raw,
-    },
-  )
-}
-
-function mergeProviderState(
-  current: Record<string, unknown> | undefined,
-  next: Record<string, unknown> | undefined,
-): Record<string, unknown> | undefined {
-  if (!current) return next
-  if (!next) return current
-  return { ...current, ...next }
-}
-
-export function statusFrom(
-  providerStatus: string | undefined,
-  statusMap: Record<string, GenerationStatus> | undefined,
-  options?: {
-    provider?: string
-    model?: string
-    unknownStatus?: UnknownStatusStrategy
-    missingStatus?: MissingStatusStrategy
-  },
-): GenerationStatus {
-  if (!providerStatus && statusMap) {
-    const missingStatus = options?.missingStatus ?? "throw"
-    if (missingStatus === "throw") {
-      throw createMediaRouterError(
-        "PROVIDER_ERROR",
-        "Provider response is missing status",
-        {
-          provider: options?.provider ?? "provider",
-          model: options?.model,
-          raw: { statusMap },
-        },
-      )
-    }
-  }
-  if (providerStatus && statusMap && !(providerStatus in statusMap)) {
-    const unknownStatus = options?.unknownStatus ?? "throw"
-    if (unknownStatus === "failed") return "failed"
-    if (unknownStatus === "throw") {
-      throw createMediaRouterError(
-        "PROVIDER_ERROR",
-        `Unknown provider status: ${providerStatus}`,
-        {
-          provider: options?.provider ?? "provider",
-          model: options?.model,
-          raw: { providerStatus, statusMap },
-        },
-      )
-    }
-  }
-  return mapProviderStatus(providerStatus, statusMap)
-}
-
-export function providerError(error: unknown, provider: string, model?: string) {
-  const normalized = normalizeMediaRouterError(error, { provider, model: model ?? "unknown" })
-  if (normalized) return normalized
-  if (error instanceof Error) {
-    return createMediaRouterError("PROVIDER_ERROR", error.message, {
-      provider,
-      model,
-      raw: error,
-    })
-  }
-  return createMediaRouterError("UNKNOWN", "Unknown provider error", {
-    provider,
-    model,
-    raw: error,
-  })
-}
-
-function assertOutputAssets(input: {
-  assets: MediaAsset[] | undefined
-  allowEmptyResult?: boolean
-  provider: string
-  model?: string
-  raw?: unknown
-}): void {
-  if (input.allowEmptyResult) return
-  if (input.assets?.some(isConsumableAsset)) return
-  throw createMediaRouterError(
-    "PROVIDER_ERROR",
-    "Provider reported success without output assets",
-    {
-      provider: input.provider,
-      model: input.model,
-      raw: input.raw,
-    },
-  )
-}
-
-function isConsumableAsset(asset: MediaAsset): boolean {
-  return Boolean(asset.url || asset.base64)
-}
-
-export function stripUndefined<T extends Record<string, unknown>>(value: T): T {
-  return Object.fromEntries(
-    Object.entries(value).filter(([, item]) => item !== undefined),
-  ) as T
 }
 
 function definedHeaders(

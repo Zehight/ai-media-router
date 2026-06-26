@@ -1,41 +1,10 @@
 import { throwMediaRouterError } from "./errors.js"
-import type { ModelDefinition, ModelMode } from "./provider.js"
+import type { ModelDefinition } from "./provider.js"
 import type { GenerationRequest, MediaInput } from "./types.js"
 
 export type RequestValidationInput = {
   request: GenerationRequest
   model?: ModelDefinition
-}
-
-export function inferModelMode(request: GenerationRequest): ModelMode {
-  const input = request.input as {
-    images?: MediaInput[]
-    mask?: MediaInput
-    image?: MediaInput
-    firstFrame?: MediaInput
-    lastFrame?: MediaInput
-    video?: MediaInput
-    videos?: MediaInput[]
-    audio?: MediaInput
-    audios?: MediaInput[]
-  }
-  if ((request.type ?? "image") === "image") {
-    return input.images?.length || input.mask
-      ? "image-to-image"
-      : "text-to-image"
-  }
-
-  if (input.audio || input.audios?.length) return "audio-to-video"
-  if (input.video || input.videos?.length) return "video-to-video"
-  if (
-    input.image ||
-    input.images?.length ||
-    input.firstFrame ||
-    input.lastFrame
-  ) {
-    return "image-to-video"
-  }
-  return "text-to-video"
 }
 
 export function validateGenerationRequest(input: RequestValidationInput): void {
@@ -56,34 +25,29 @@ export function validateGenerationRequest(input: RequestValidationInput): void {
     )
   }
 
-  const mode = inferModelMode({ ...request, type: requestType } as GenerationRequest)
-  if (!model.modes.includes(mode)) {
-    throwMediaRouterError("BAD_REQUEST", `Model ${model.id} does not support ${mode}`, {
-      provider: request.provider,
-      model: request.model,
-    })
-  }
-
   validateCommonCapabilities(request, model)
   if (requestType === "image") validateImageCapabilities(request, model)
   if (requestType === "video") validateVideoCapabilities(request, model)
+  if (requestType === "audio") validateAudioCapabilities(request, model)
+  if (requestType === "model3d") validateModel3DCapabilities(request, model)
 }
 
 function validateCommonCapabilities(
   request: GenerationRequest,
   model: ModelDefinition,
 ): void {
+  const options = request.options as
+    | {
+        width?: number
+        height?: number
+        seed?: number
+      }
+    | undefined
+  validatePositiveFiniteOption(request, "width", options?.width)
+  validatePositiveFiniteOption(request, "height", options?.height)
+  validateFiniteOption(request, "seed", options?.seed)
   if (request.options?.seed != null && model.capabilities?.supportsSeed === false) {
     throwMediaRouterError("BAD_REQUEST", `Model ${model.id} does not support seed`, {
-      provider: request.provider,
-      model: request.model,
-    })
-  }
-  if (
-    request.options?.webhookUrl &&
-    model.capabilities?.supportsWebhook === false
-  ) {
-    throwMediaRouterError("BAD_REQUEST", `Model ${model.id} does not support webhook`, {
       provider: request.provider,
       model: request.model,
     })
@@ -94,11 +58,13 @@ function validateImageCapabilities(
   request: GenerationRequest,
   model: ModelDefinition,
 ): void {
-  const count = "count" in (request.options ?? {}) ? request.options?.count ?? 1 : 1
+  const input = request.input as { images?: MediaInput[] }
+  const options = request.options as { count?: number } | undefined
+  const count = "count" in (options ?? {}) ? options?.count ?? 1 : 1
   const countCapability = model.capabilities?.count
   const maxCount = countCapability?.max ?? 1
-  if (count < 1) {
-    throwMediaRouterError("BAD_REQUEST", "Image count must be at least 1", {
+  if (!isPositiveInteger(count)) {
+    throwMediaRouterError("BAD_REQUEST", "Image count must be a positive integer", {
       provider: request.provider,
       model: request.model,
     })
@@ -112,7 +78,7 @@ function validateImageCapabilities(
   }
 
   const maxImages = model.capabilities?.maxImages
-  if (maxImages != null && countMediaInputs(request.input.images) > maxImages) {
+  if (maxImages != null && countMediaInputs(input.images) > maxImages) {
     throwMediaRouterError(
       "BAD_REQUEST",
       `Model ${model.id} supports at most ${maxImages} input image(s)`,
@@ -133,12 +99,30 @@ function validateVideoCapabilities(
     video?: MediaInput
     videos?: MediaInput[]
   }
-  const duration = request.options?.duration
-  if (
-    duration != null &&
-    model.capabilities?.durations?.length &&
-    !model.capabilities.durations.includes(duration)
-  ) {
+  const options = request.options as
+    | {
+        duration?: number
+        fps?: number
+      }
+    | undefined
+  const duration = options?.duration
+  if (duration != null && !isPositiveFiniteNumber(duration)) {
+    throwMediaRouterError("BAD_REQUEST", "Video duration must be positive", {
+      provider: request.provider,
+      model: request.model,
+    })
+  }
+  const maxDuration = model.capabilities?.dimensions?.video?.maxDuration
+  if (duration != null && maxDuration != null && duration > maxDuration) {
+    throwMediaRouterError(
+      "BAD_REQUEST",
+      `Model ${model.id} supports at most ${maxDuration}s duration`,
+      { provider: request.provider, model: request.model },
+    )
+  }
+  const durations =
+    model.capabilities?.durations ?? model.capabilities?.dimensions?.video?.durations
+  if (duration != null && durations?.length && !durations.includes(duration)) {
     throwMediaRouterError(
       "BAD_REQUEST",
       `Model ${model.id} does not support ${duration}s duration`,
@@ -146,7 +130,13 @@ function validateVideoCapabilities(
     )
   }
 
-  const fps = request.options?.fps
+  const fps = options?.fps
+  if (fps != null && !isPositiveFiniteNumber(fps)) {
+    throwMediaRouterError("BAD_REQUEST", "Video fps must be positive", {
+      provider: request.provider,
+      model: request.model,
+    })
+  }
   if (
     fps != null &&
     model.capabilities?.fps?.length &&
@@ -190,6 +180,87 @@ function validateVideoCapabilities(
   }
 }
 
+function validateAudioCapabilities(
+  request: GenerationRequest,
+  model: ModelDefinition,
+): void {
+  const input = request.input as {
+    audio?: MediaInput
+    audios?: MediaInput[]
+  }
+  const options = request.options as
+    | {
+        duration?: number
+        sampleRate?: number
+      }
+    | undefined
+  validatePositiveFiniteOption(request, "Audio duration", options?.duration)
+  validatePositiveFiniteOption(request, "Audio sampleRate", options?.sampleRate)
+
+  const maxAudios = model.capabilities?.maxAudios
+  if (
+    maxAudios != null &&
+    countMediaInputs(input.audios) + countMediaInputs([input.audio]) > maxAudios
+  ) {
+    throwMediaRouterError(
+      "BAD_REQUEST",
+      `Model ${model.id} supports at most ${maxAudios} input audio(s)`,
+      { provider: request.provider, model: request.model },
+    )
+  }
+}
+
+function validateModel3DCapabilities(
+  request: GenerationRequest,
+  model: ModelDefinition,
+): void {
+  const input = request.input as {
+    images?: MediaInput[]
+  }
+  const maxImages = model.capabilities?.maxImages
+  if (maxImages != null && countMediaInputs(input.images) > maxImages) {
+    throwMediaRouterError(
+      "BAD_REQUEST",
+      `Model ${model.id} supports at most ${maxImages} input image(s)`,
+      { provider: request.provider, model: request.model },
+    )
+  }
+}
+
 function countMediaInputs(inputs: Array<MediaInput | undefined> | undefined): number {
   return inputs?.filter(Boolean).length ?? 0
+}
+
+function isPositiveInteger(value: number): boolean {
+  return Number.isInteger(value) && value >= 1
+}
+
+function isPositiveFiniteNumber(value: number): boolean {
+  return Number.isFinite(value) && value > 0
+}
+
+function validatePositiveFiniteOption(
+  request: GenerationRequest,
+  name: string,
+  value: number | undefined,
+): void {
+  if (value == null) return
+  if (isPositiveFiniteNumber(value)) return
+  throwMediaRouterError("BAD_REQUEST", `${name} must be positive`, {
+    provider: request.provider,
+    model: request.model,
+  })
+}
+
+function validateFiniteOption(
+  request: GenerationRequest,
+  name: string,
+  value: number | undefined,
+): void {
+  if (value == null) return
+  if (Number.isFinite(value)) return
+  throwMediaRouterError("BAD_REQUEST", `${name} must be finite`, {
+    provider: request.provider,
+    model: request.model,
+  })
 }

@@ -49,10 +49,12 @@ describe("nearestAspectRatio", () => {
 })
 
 describe("resolution helpers", () => {
-  it("maps image dimensions by pixel area", () => {
+  it("maps image dimensions by equivalent square side", () => {
     expect(resolveImageResolution(512, 512)).toBe("0.5K")
     expect(resolveImageResolution(1024, 1024)).toBe("1K")
     expect(resolveImageResolution(2048, 2048)).toBe("2K")
+    expect(resolveImageResolution(2304, 4096)).toBe("3K")
+    expect(resolveImageResolution(3040, 5504)).toBe("4K")
     expect(resolveImageResolution(4096, 4096)).toBe("4K")
   })
 
@@ -129,6 +131,28 @@ describe("resolveDimensions", () => {
     })
   })
 
+  it("maps video dimensions to supported provider resolution tiers", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "video",
+        width: 1920,
+        height: 1080,
+        capabilities: {
+          video: {
+            resolutions: ["720p"],
+          },
+        },
+      }),
+    ).toMatchObject({
+      width: 1280,
+      height: 720,
+      resolutionTier: "720p",
+      size: "1280x720",
+      providerSize: "720p",
+    })
+  })
+
   it("resolves portrait video dimensions", () => {
     expect(
       resolveDimensions({
@@ -176,6 +200,209 @@ describe("resolveDimensions", () => {
       }),
     ).toMatchObject({
       size: "2048*2048",
+    })
+  })
+
+  it("maps image dimensions to the nearest provider-supported size", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 1000,
+        height: 1000,
+        capabilities: {
+          image: {
+            supportedSizes: ["1024x1024", "1536x1024", "1024x1536"],
+          },
+        },
+      }),
+    ).toMatchObject({
+      width: 1024,
+      height: 1024,
+      size: "1024x1024",
+      providerSize: "1024x1024",
+    })
+  })
+
+  it("rejects unsupported provider image sizes in strict mode", () => {
+    expect(() =>
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 1000,
+        height: 1000,
+        mode: "strict",
+        capabilities: {
+          image: {
+            supportedSizes: ["1024x1024"],
+          },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("maps image resolution tiers to supported provider tiers", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4096,
+        height: 4096,
+        capabilities: {
+          image: {
+            resolutionTiers: ["1K", "2K"],
+          },
+        },
+      }),
+    ).toMatchObject({
+      resolutionTier: "2K",
+      providerSize: "2K",
+    })
+  })
+
+  it("rejects image dimensions above provider limits by default", () => {
+    expect(() =>
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4096,
+        height: 2048,
+        capabilities: {
+          image: {
+            maxWidth: 2048,
+            maxHeight: 2048,
+          },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("clamps image dimensions when provider strategy is clamp", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4096,
+        height: 2048,
+        capabilities: {
+          strategy: "clamp",
+          image: {
+            maxWidth: 2048,
+            maxHeight: 2048,
+          },
+        },
+      }),
+    ).toMatchObject({
+      width: 2048,
+      height: 1024,
+      size: "2048x1024",
+    })
+  })
+
+  it("returns fixed 16-aligned formatted image dimensions without changing width and height", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 1537,
+        height: 864,
+      }),
+    ).toMatchObject({
+      width: 1537,
+      height: 864,
+      fmtWidth: 1536,
+      fmtHeight: 864,
+      size: "1537x864",
+    })
+  })
+
+  it("still returns fixed 16-aligned formatted image dimensions in strict mode", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 1537,
+        height: 864,
+        mode: "strict",
+      }),
+    ).toMatchObject({
+      width: 1537,
+      height: 864,
+      fmtWidth: 1536,
+      fmtHeight: 864,
+    })
+  })
+
+  it("rejects image dimensions outside provider aspect ratio limits", () => {
+    expect(() =>
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4096,
+        height: 1024,
+        capabilities: {
+          image: {
+            minAspectRatio: 1 / 3,
+            maxAspectRatio: 3,
+          },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects image dimensions above provider pixel limits", () => {
+    expect(() =>
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4096,
+        height: 4096,
+        capabilities: {
+          image: {
+            maxPixels: 3840 * 2160,
+          },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("rejects image dimensions below provider pixel limits", () => {
+    expect(() =>
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 512,
+        height: 512,
+        capabilities: {
+          image: {
+            minPixels: 655_360,
+          },
+        },
+      }),
+    ).toThrow(MediaRouterException)
+  })
+
+  it("clamps image dimensions and returns fixed 16-aligned formatted image dimensions", () => {
+    expect(
+      resolveDimensions({
+        ...baseInput,
+        mediaType: "image",
+        width: 4097,
+        height: 2049,
+        capabilities: {
+          strategy: "clamp",
+          image: {
+            maxWidth: 2048,
+            maxHeight: 2048,
+          },
+        },
+      }),
+    ).toMatchObject({
+      width: 2048,
+      height: 1024,
+      fmtWidth: 2048,
+      fmtHeight: 1024,
+      size: "2048x1024",
     })
   })
 

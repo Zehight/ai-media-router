@@ -21,6 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@media-router/client": "workspace:*",
     "@media-router/core": "workspace:*"
   }
 }

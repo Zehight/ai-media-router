@@ -6,10 +6,22 @@ import {
   type ProviderRuntimeContext,
 } from "@media-router/core"
 
+export type ProviderInstanceInput =
+  | string
+  | undefined
+  | ProviderInstanceConfig
+  | (Omit<ProviderInstanceConfig, "plugin"> & { plugin?: string })
+
 export type ProviderRegistryInput = {
   plugins: Record<string, ProviderPlugin>
-  providers: Record<string, ProviderInstanceConfig>
+  providers: Record<string, ProviderInstanceInput>
   fetch?: typeof fetch
+}
+
+export type ProviderRegistryEntry = {
+  provider: string
+  plugin: ProviderPlugin
+  config: ProviderInstanceConfig
 }
 
 export class ProviderRegistry {
@@ -19,7 +31,7 @@ export class ProviderRegistry {
 
   constructor(input: ProviderRegistryInput) {
     this.plugins = input.plugins
-    this.providers = input.providers
+    this.providers = normalizeProviders(input.providers)
     this.fetchImpl = input.fetch ?? globalThis.fetch
     if (!this.fetchImpl) {
       throw new MediaRouterException(
@@ -35,23 +47,16 @@ export class ProviderRegistry {
     config: ProviderInstanceConfig
     runtime: ProviderRuntimeContext
   } {
-    const config = this.providers[providerName]
-    if (!config) {
+    if (!Object.prototype.hasOwnProperty.call(this.providers, providerName)) {
       throw new MediaRouterException(
         createMediaRouterError("BAD_REQUEST", `Unknown provider: ${providerName}`, {
           provider: providerName,
         }),
       )
     }
+    const config = this.providers[providerName] as ProviderInstanceConfig
 
-    const plugin = this.plugins[config.plugin]
-    if (!plugin) {
-      throw new MediaRouterException(
-        createMediaRouterError("BAD_REQUEST", `Unknown plugin: ${config.plugin}`, {
-          provider: providerName,
-        }),
-      )
-    }
+    const plugin = this.requirePlugin(providerName, config.plugin)
 
     return {
       plugin,
@@ -65,5 +70,57 @@ export class ProviderRegistry {
         resolved: {},
       },
     }
+  }
+
+  entries(): ProviderRegistryEntry[] {
+    return Object.entries(this.providers).map(([provider, config]) => ({
+      provider,
+      config,
+      plugin: this.requirePlugin(provider, config.plugin),
+    }))
+  }
+
+  private requirePlugin(provider: string, pluginName: string): ProviderPlugin {
+    const plugin = this.plugins[pluginName]
+    if (!plugin) {
+      throw new MediaRouterException(
+        createMediaRouterError("BAD_REQUEST", `Unknown plugin: ${pluginName}`, {
+          provider,
+        }),
+      )
+    }
+    return plugin
+  }
+}
+
+function normalizeProviders(
+  providers: Record<string, ProviderInstanceInput>,
+): Record<string, ProviderInstanceConfig> {
+  return Object.fromEntries(
+    Object.entries(providers).map(([name, config]) => [
+      name,
+      normalizeProviderConfig(name, config),
+    ]),
+  )
+}
+
+function normalizeProviderConfig(
+  name: string,
+  config: ProviderInstanceInput,
+): ProviderInstanceConfig {
+  if (config == null) {
+    return {
+      plugin: name,
+    }
+  }
+  if (typeof config === "string") {
+    return {
+      plugin: name,
+      apiKey: config,
+    }
+  }
+  return {
+    ...config,
+    plugin: config.plugin ?? name,
   }
 }

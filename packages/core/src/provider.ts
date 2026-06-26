@@ -32,13 +32,21 @@ export type CountCapability = {
 export type ModelDefinition = {
   id: string
   type: MediaType
-  modes: ModelMode[]
+  /** @deprecated Use capabilities.actions to describe supported request shapes. */
+  modes?: ModelMode[]
   async: boolean
   defaults?: {
     options?: Record<string, unknown>
     providerOptions?: Record<string, unknown>
   }
   capabilities?: {
+    actions?: Record<
+      string,
+      {
+        description?: string
+        consumes?: string[]
+      }
+    >
     dimensions?: DimensionCapabilities
     count?: CountCapability
     maxImages?: number
@@ -47,7 +55,6 @@ export type ModelDefinition = {
     durations?: number[]
     fps?: number[]
     supportsSeed?: boolean
-    supportsWebhook?: boolean
   }
 }
 
@@ -108,6 +115,7 @@ export type ProviderPlugin = {
   displayName: string
   baseURL?: string
   auth?: AuthDefinition
+  defaultModels?: Partial<Record<MediaType, string>>
   models: Record<string, ModelDefinition>
   driver: ProviderDriver
 }

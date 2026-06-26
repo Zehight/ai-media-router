@@ -8,7 +8,6 @@ export type GenerationStatus =
   | "cancelled"
 
 export type DimensionMode = "nearest" | "strict"
-
 export type PartialFailureMode = "fail" | "return-successful"
 
 export type MediaInput =
@@ -22,36 +21,37 @@ export type MediaInput =
     }
   | { type: "file"; path: string; mimeType?: string }
 
-export type ImageGenerationRequest = {
-  type?: "image"
+export type BaseGenerationRequest<TType extends MediaType, TInput, TOptions> = {
+  type: TType
   provider: string
   model: string
-  input: {
+  action?: string
+  input: TInput
+  options?: TOptions
+  providerOptions?: Record<string, unknown>
+}
+
+export type ImageGenerationRequest = BaseGenerationRequest<
+  "image",
+  {
     prompt: string
     negativePrompt?: string
     images?: MediaInput[]
     mask?: MediaInput
-  }
-  options?: {
+  },
+  {
     width?: number
     height?: number
     count?: number
-    maxConcurrency?: number
-    partialFailure?: PartialFailureMode
-    dimensionMode?: DimensionMode
     seed?: number
     quality?: "low" | "medium" | "high" | "auto" | string
     outputFormat?: "png" | "jpeg" | "webp" | string
-    webhookUrl?: string
   }
-  providerOptions?: Record<string, unknown>
-}
+>
 
-export type VideoGenerationRequest = {
-  type?: "video"
-  provider: string
-  model: string
-  input: {
+export type VideoGenerationRequest = BaseGenerationRequest<
+  "video",
+  {
     prompt: string
     negativePrompt?: string
     image?: MediaInput
@@ -62,8 +62,8 @@ export type VideoGenerationRequest = {
     videos?: MediaInput[]
     audio?: MediaInput
     audios?: MediaInput[]
-  }
-  options?: {
+  },
+  {
     width?: number
     height?: number
     duration?: number
@@ -72,14 +72,46 @@ export type VideoGenerationRequest = {
     mode?: "standard" | "pro" | "fast" | "turbo" | string
     quality?: "low" | "medium" | "high" | "auto" | string
     audioEnabled?: boolean
-    cameraFixed?: boolean
-    dimensionMode?: DimensionMode
-    webhookUrl?: string
   }
-  providerOptions?: Record<string, unknown>
-}
+>
 
-export type GenerationRequest = ImageGenerationRequest | VideoGenerationRequest
+export type AudioGenerationRequest = BaseGenerationRequest<
+  "audio",
+  {
+    prompt?: string
+    text?: string
+    audio?: MediaInput
+    audios?: MediaInput[]
+  },
+  {
+    duration?: number
+    seed?: number
+    voice?: string
+    format?: string
+    sampleRate?: number
+  }
+>
+
+export type Model3DGenerationRequest = BaseGenerationRequest<
+  "model3d",
+  {
+    prompt?: string
+    images?: MediaInput[]
+    model?: MediaInput
+  },
+  {
+    format?: string
+    quality?: string
+    texture?: boolean
+    seed?: number
+  }
+>
+
+export type GenerationRequest =
+  | ImageGenerationRequest
+  | VideoGenerationRequest
+  | AudioGenerationRequest
+  | Model3DGenerationRequest
 
 export type MediaAsset = {
   type: MediaType
@@ -95,6 +127,8 @@ export type MediaAsset = {
 export type ResolvedDimensions = {
   width: number
   height: number
+  fmtWidth?: number
+  fmtHeight?: number
   aspectRatio: string
   normalizedRatio: number
   orientation: "square" | "landscape" | "portrait"
@@ -111,6 +145,7 @@ export type GenerationResult = {
   providerId: string
   model: string
   status: "succeeded"
+  asset?: MediaAsset
   assets: MediaAsset[]
   usage?: {
     unit?: "token" | "credit" | "second" | "image" | "request"
