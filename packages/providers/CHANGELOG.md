@@ -1,5 +1,11 @@
 # @miragari/ai-media-router
 
+## 0.2.2
+
+### Patch Changes
+
+- Send only `["IMAGE"]` for Gemini image generation `responseModalities` instead of mixing in `"TEXT"`.
+
 ## 0.2.1
 
 ### Patch Changes

@@ -67,6 +67,9 @@ describe("googleProvider", () => {
           ],
         },
       ],
+      generationConfig: {
+        responseModalities: ["IMAGE"],
+      },
     })
     harness.expectAllResponsesUsed()
   })

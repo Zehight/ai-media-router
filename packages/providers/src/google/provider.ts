@@ -64,7 +64,7 @@ export const googleProvider = defineHttpProvider<GoogleResponse>({
             },
           ],
           generationConfig: {
-            responseModalities: ["IMAGE", "TEXT"],
+            responseModalities: ["IMAGE"],
             imageConfig: {
               aspectRatio: dimensions?.aspectRatio,
               resolution: dimensions?.resolutionTier,

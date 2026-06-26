@@ -1,6 +1,6 @@
 {
   "name": "@miragari/ai-media-router",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Unified AI media generation SDK with built-in providers and one API for image, video, audio, and 3D workflows.",
   "type": "module",
   "main": "./dist/index.js",
