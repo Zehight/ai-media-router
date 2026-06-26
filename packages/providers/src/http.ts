@@ -11,7 +11,7 @@ import {
   type ProviderPlugin,
   type ProviderPollContext,
   type ProviderRuntimeContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import {
   providerError,
   statusFrom,

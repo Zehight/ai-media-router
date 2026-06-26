@@ -1,11 +1,11 @@
-# @miragari/core
+# @miragari/ai-media-router-core
 
 Shared protocol and validation layer for MediaRouter.
 
 ## Install
 
 ```bash
-npm install @miragari/core
+npm install @miragari/ai-media-router-core
 ```
 
 ## What this package includes
@@ -23,6 +23,6 @@ or internal tooling on top of MediaRouter concepts.
 
 ## Related docs
 
-- Repository overview: <https://github.com/Zehight/mediaRouter>
-- English docs: <https://github.com/Zehight/mediaRouter/blob/main/docs/en/getting-started.md>
-- 中文文档: <https://github.com/Zehight/mediaRouter/blob/main/docs/zh-CN/getting-started.md>
+- Repository overview: <https://github.com/Zehight/ai-media-router>
+- English docs: <https://github.com/Zehight/ai-media-router/blob/main/docs/en/getting-started.md>
+- 中文文档: <https://github.com/Zehight/ai-media-router/blob/main/docs/zh-CN/getting-started.md>

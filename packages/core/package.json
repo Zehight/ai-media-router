@@ -1,29 +1,32 @@
 {
-  "name": "@miragari/core",
-  "version": "0.1.1",
-  "description": "Shared protocol, validation, and provider types for MediaRouter.",
+  "name": "@miragari/ai-media-router-core",
+  "version": "0.2.0",
+  "description": "Shared protocol, validation, and provider types for AI Media Router.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "author": "Zehight",
-  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "homepage": "https://github.com/Zehight/ai-media-router#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "url": "git+https://github.com/Zehight/ai-media-router.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/Zehight/mediaRouter/issues"
+    "url": "https://github.com/Zehight/ai-media-router/issues"
   },
   "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
+    "ai-media-router",
     "media-router",
     "sdk",
     "ai",
+    "multimodal",
+    "multi-provider",
     "image-generation",
     "video-generation"
   ],

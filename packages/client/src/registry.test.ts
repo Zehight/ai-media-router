@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ProviderPlugin } from "@miragari/core"
+import type { ProviderPlugin } from "@miragari/ai-media-router-core"
 import { ProviderRegistry } from "./registry.js"
 
 const plugin = {

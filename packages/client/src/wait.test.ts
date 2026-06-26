@@ -4,7 +4,7 @@ import {
   type GenerationJob,
   type ProviderPlugin,
   type ProviderRuntimeContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import { waitForJob } from "./wait.js"
 
 const baseJob: GenerationJob = {

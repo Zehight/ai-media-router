@@ -26,7 +26,7 @@ importers:
 
   examples/basic:
     dependencies:
-      '@miragari/providers':
+      '@miragari/ai-media-router':
         specifier: workspace:*
         version: link:../../packages/providers
     devDependencies:
@@ -36,7 +36,7 @@ importers:
 
   packages/client:
     dependencies:
-      '@miragari/core':
+      '@miragari/ai-media-router-core':
         specifier: workspace:*
         version: link:../core
 
@@ -44,10 +44,10 @@ importers:
 
   packages/providers:
     dependencies:
-      '@miragari/client':
+      '@miragari/ai-media-router-client':
         specifier: workspace:*
         version: link:../client
-      '@miragari/core':
+      '@miragari/ai-media-router-core':
         specifier: workspace:*
         version: link:../core
 

@@ -4,7 +4,7 @@ import {
   type ProviderInstanceConfig,
   type ProviderPlugin,
   type ProviderRuntimeContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 
 export type ProviderInstanceInput =
   | string

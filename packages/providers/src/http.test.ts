@@ -5,7 +5,7 @@ import {
   type ProviderCancelContext,
   type ProviderCreateContext,
   type ProviderPollContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import {
   completed,
   defineHttpProvider,

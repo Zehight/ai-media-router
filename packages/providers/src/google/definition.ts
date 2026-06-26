@@ -1,4 +1,4 @@
-import type { ModelDefinition } from "@miragari/core"
+import type { ModelDefinition } from "@miragari/ai-media-router-core"
 
 export const googleModels: Record<string, ModelDefinition> = {
   "gemini-2.5-flash-image": {

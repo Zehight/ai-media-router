@@ -1,4 +1,10 @@
-# @miragari/core
+# @miragari/ai-media-router-core
+
+## 0.2.0
+
+### Minor Changes
+
+- Rename the public package family and repository branding to AI Media Router for better discoverability.
 
 ## 0.1.1
 

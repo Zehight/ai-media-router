@@ -1,4 +1,4 @@
-import type { GenerationStatus, ModelDefinition } from "@miragari/core"
+import type { GenerationStatus, ModelDefinition } from "@miragari/ai-media-router-core"
 
 export const volcengineModels: Record<string, ModelDefinition> = {
   "doubao-seedream-4-5-251128": {

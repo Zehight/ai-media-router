@@ -1,29 +1,32 @@
 {
-  "name": "@miragari/client",
-  "version": "0.1.1",
-  "description": "Client SDK for routing media generation requests across provider plugins.",
+  "name": "@miragari/ai-media-router-client",
+  "version": "0.2.0",
+  "description": "Client runtime for AI Media Router and multi-provider media generation workflows.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "author": "Zehight",
-  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "homepage": "https://github.com/Zehight/ai-media-router#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "url": "git+https://github.com/Zehight/ai-media-router.git",
     "directory": "packages/client"
   },
   "bugs": {
-    "url": "https://github.com/Zehight/mediaRouter/issues"
+    "url": "https://github.com/Zehight/ai-media-router/issues"
   },
   "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
+    "ai-media-router",
     "media-router",
     "sdk",
     "ai",
+    "multimodal",
+    "multi-provider",
     "image-generation",
     "video-generation"
   ],
@@ -46,6 +49,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@miragari/core": "workspace:*"
+    "@miragari/ai-media-router-core": "workspace:*"
   }
 }

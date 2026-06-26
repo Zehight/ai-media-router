@@ -25,7 +25,7 @@ import {
   type MediaInput,
   type MediaRouterError,
   type ProviderCreateContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import { volcengineModels, volcengineStatusMap } from "./definition.js"
 
 type ArkImageResponse = {

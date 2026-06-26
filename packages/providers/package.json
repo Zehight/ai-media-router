@@ -1,29 +1,33 @@
 {
-  "name": "@miragari/providers",
-  "version": "0.1.1",
-  "description": "Built-in MediaRouter providers and createMediaRouter() factory.",
+  "name": "@miragari/ai-media-router",
+  "version": "0.2.0",
+  "description": "Unified AI media generation SDK with built-in providers and one API for image, video, audio, and 3D workflows.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "author": "Zehight",
-  "homepage": "https://github.com/Zehight/mediaRouter#readme",
+  "homepage": "https://github.com/Zehight/ai-media-router#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Zehight/mediaRouter.git",
+    "url": "git+https://github.com/Zehight/ai-media-router.git",
     "directory": "packages/providers"
   },
   "bugs": {
-    "url": "https://github.com/Zehight/mediaRouter/issues"
+    "url": "https://github.com/Zehight/ai-media-router/issues"
   },
   "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
+    "ai-media-router",
     "media-router",
     "sdk",
     "ai",
+    "multimodal",
+    "multi-provider",
+    "unified-api",
     "image-generation",
     "video-generation"
   ],
@@ -46,7 +50,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@miragari/client": "workspace:*",
-    "@miragari/core": "workspace:*"
+    "@miragari/ai-media-router-client": "workspace:*",
+    "@miragari/ai-media-router-core": "workspace:*"
   }
 }

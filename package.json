@@ -1,16 +1,16 @@
 {
-  "name": "media-router",
+  "name": "ai-media-router",
   "version": "0.1.0",
   "private": true,
-  "description": "TypeScript-first SDK for routing image and video generation across media providers.",
+  "description": "Unified TypeScript SDK for multi-provider AI image, video, audio, and 3D generation.",
   "license": "MIT",
-  "homepage": "https://zehight.github.io/mediaRouter/",
+  "homepage": "https://zehight.github.io/ai-media-router/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Zehight/mediaRouter.git"
+    "url": "git+https://github.com/Zehight/ai-media-router.git"
   },
   "bugs": {
-    "url": "https://github.com/Zehight/mediaRouter/issues"
+    "url": "https://github.com/Zehight/ai-media-router/issues"
   },
   "type": "module",
   "packageManager": "pnpm@9.15.0",
@@ -18,7 +18,7 @@
     "build": "pnpm -r build",
     "changeset": "changeset",
     "docs:serve": "python -m http.server 4173 -d site",
-    "release:publish": "pnpm --filter @miragari/core publish --access public --no-git-checks && pnpm --filter @miragari/client publish --access public --no-git-checks && pnpm --filter @miragari/providers publish --access public --no-git-checks",
+    "release:publish": "pnpm --filter @miragari/ai-media-router-core publish --access public --no-git-checks && pnpm --filter @miragari/ai-media-router-client publish --access public --no-git-checks && pnpm --filter @miragari/ai-media-router publish --access public --no-git-checks",
     "version-packages": "changeset version && pnpm install --no-frozen-lockfile",
     "typecheck": "pnpm -r typecheck",
     "typecheck:tests": "pnpm -r --if-present typecheck:test",

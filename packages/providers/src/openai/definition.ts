@@ -1,4 +1,4 @@
-import type { GenerationStatus, ModelDefinition } from "@miragari/core"
+import type { GenerationStatus, ModelDefinition } from "@miragari/ai-media-router-core"
 
 export const openaiModels: Record<string, ModelDefinition> = {
   "gpt-image-1": {

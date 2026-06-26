@@ -3,13 +3,13 @@
 ## 安装
 
 ```bash
-npm install @miragari/providers
+npm install @miragari/ai-media-router
 ```
 
 ## 创建客户端
 
 ```ts
-import { createMediaRouter } from "@miragari/providers"
+import { createMediaRouter } from "@miragari/ai-media-router"
 
 const client = createMediaRouter({
   provider: "openai",
@@ -34,4 +34,4 @@ const result = await client.generateImage({
 
 - Provider 开发请看 [../../packages/providers/README.md](../../packages/providers/README.md)
 - 发布流程请看 [./releasing.md](./releasing.md)
-- 公开站点请看 <https://zehight.github.io/mediaRouter/>
+- 公开站点请看 <https://zehight.github.io/ai-media-router/>

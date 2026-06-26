@@ -1,15 +1,15 @@
-# MediaRouter
+# AI Media Router
 
-[![CI](https://github.com/Zehight/mediaRouter/actions/workflows/ci.yml/badge.svg)](https://github.com/Zehight/mediaRouter/actions/workflows/ci.yml)
-[![Release Packages](https://github.com/Zehight/mediaRouter/actions/workflows/release.yml/badge.svg)](https://github.com/Zehight/mediaRouter/actions/workflows/release.yml)
-[![Deploy Docs Site](https://github.com/Zehight/mediaRouter/actions/workflows/pages.yml/badge.svg)](https://github.com/Zehight/mediaRouter/actions/workflows/pages.yml)
-[![npm version](https://img.shields.io/npm/v/%40miragari%2Fproviders)](https://www.npmjs.com/package/@miragari/providers)
+[![CI](https://github.com/Zehight/ai-media-router/actions/workflows/ci.yml/badge.svg)](https://github.com/Zehight/ai-media-router/actions/workflows/ci.yml)
+[![Release Packages](https://github.com/Zehight/ai-media-router/actions/workflows/release.yml/badge.svg)](https://github.com/Zehight/ai-media-router/actions/workflows/release.yml)
+[![Deploy Docs Site](https://github.com/Zehight/ai-media-router/actions/workflows/pages.yml/badge.svg)](https://github.com/Zehight/ai-media-router/actions/workflows/pages.yml)
+[![npm version](https://img.shields.io/npm/v/%40miragari%2Fai-media-router)](https://www.npmjs.com/package/@miragari/ai-media-router)
 
-[中文文档](./README.zh-CN.md) · [Docs](./docs/en/getting-started.md) · [Provider Guide](./packages/providers/README.md) · [GitHub Pages](https://zehight.github.io/mediaRouter/)
+[中文文档](./README.zh-CN.md) · [Docs](./docs/en/getting-started.md) · [Provider Guide](./packages/providers/README.md) · [GitHub Pages](https://zehight.github.io/ai-media-router/)
 
-MediaRouter is a TypeScript-first SDK for routing image, video, audio, and 3D generation across multiple providers behind one stable interface.
+AI Media Router is a unified TypeScript SDK for multi-provider AI image, video, audio, and 3D generation behind one stable API.
 
-## Why MediaRouter
+## Why AI Media Router
 
 - One request model across multiple AI media providers
 - Clear separation between stable cross-provider parameters and provider-specific knobs
@@ -19,26 +19,26 @@ MediaRouter is a TypeScript-first SDK for routing image, video, audio, and 3D ge
 
 ## Packages
 
-- `@miragari/core`: shared types, validation, dimensions, errors, and provider contracts
-- `@miragari/client`: router client, polling helpers, batching, profiles, and defaults
-- `@miragari/providers`: built-in providers plus `createMediaRouter()`
+- `@miragari/ai-media-router-core`: shared types, validation, dimensions, errors, and provider contracts
+- `@miragari/ai-media-router-client`: router client, polling helpers, batching, profiles, and defaults
+- `@miragari/ai-media-router`: built-in providers plus `createMediaRouter()`
 
 ## Install
 
 ```bash
-npm install @miragari/providers
+npm install @miragari/ai-media-router
 ```
 
 Or install only the layers you need:
 
 ```bash
-npm install @miragari/core @miragari/client
+npm install @miragari/ai-media-router-core @miragari/ai-media-router-client
 ```
 
 ## Quick Start
 
 ```ts
-import { createMediaRouter } from "@miragari/providers"
+import { createMediaRouter } from "@miragari/ai-media-router"
 
 const client = createMediaRouter({
   provider: "openai",
@@ -62,7 +62,7 @@ console.log(result.asset)
 
 ## Standard Request Shape
 
-MediaRouter keeps stable request fields in `input` and `options`, and pushes unstable provider-native switches into `providerOptions`.
+AI Media Router keeps stable request fields in `input` and `options`, and pushes unstable provider-native switches into `providerOptions`.
 
 - Image: `prompt`, `negativePrompt`, `images`, `mask`, `width`, `height`, `count`, `seed`, `quality`, `outputFormat`
 - Video: `prompt`, `image`, `images`, `video`, `videos`, `audio`, `duration`, `fps`, `mode`, `quality`
@@ -72,7 +72,7 @@ MediaRouter keeps stable request fields in `input` and `options`, and pushes uns
 ## Built-in Provider Example
 
 ```ts
-import { createMediaRouter } from "@miragari/providers"
+import { createMediaRouter } from "@miragari/ai-media-router"
 
 const client = createMediaRouter({
   providers: {

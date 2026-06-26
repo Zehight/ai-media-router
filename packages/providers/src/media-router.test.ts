@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ProviderPlugin } from "@miragari/core"
+import type { ProviderPlugin } from "@miragari/ai-media-router-core"
 import { builtinProviderPlugins } from "./builtin.js"
 import { createMediaRouter } from "./media-router.js"
 import { completed } from "./toolkit.js"

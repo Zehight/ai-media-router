@@ -9,13 +9,13 @@ import type {
   ProviderCreateContext,
   ProviderCreateOutput,
   ProviderPollContext,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import {
   createId,
   createMediaRouterError,
   mapProviderStatus,
   normalizeMediaRouterError,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 
 type PromptFlagValue = string | number | boolean | undefined
 

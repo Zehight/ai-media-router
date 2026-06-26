@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   createMediaRouterError,
   type ProviderPlugin,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import { MediaRouter } from "./media-router.js"
 
 const model = {

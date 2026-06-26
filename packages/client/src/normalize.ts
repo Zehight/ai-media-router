@@ -8,7 +8,7 @@ import {
   type MediaType,
   type Model3DGenerationRequest,
   type VideoGenerationRequest,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 
 export type GenerationMediaType = Exclude<MediaType, "file">
 type ModelDefaults = Partial<Record<GenerationMediaType, string>>

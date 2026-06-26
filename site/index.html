@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MediaRouter</title>
+    <title>AI Media Router</title>
     <meta
       name="description"
       content="A TypeScript-first router SDK for image, video, audio, and 3D generation providers."
@@ -19,12 +19,12 @@
   <body>
     <div class="site-shell">
       <header class="topbar">
-        <a class="brand" href="./index.html">MediaRouter</a>
+        <a class="brand" href="./index.html">AI Media Router</a>
         <nav class="nav">
           <a href="./index.html">EN</a>
           <a href="./zh-CN.html">中文</a>
-          <a href="https://github.com/Zehight/mediaRouter">GitHub</a>
-          <a href="https://www.npmjs.com/package/@miragari/providers">npm</a>
+          <a href="https://github.com/Zehight/ai-media-router">GitHub</a>
+          <a href="https://www.npmjs.com/package/@miragari/ai-media-router">npm</a>
         </nav>
       </header>
 
@@ -33,12 +33,12 @@
           <p class="eyebrow">TypeScript-first media generation routing</p>
           <h1>One stable SDK across image, video, audio, and 3D providers.</h1>
           <p class="lede">
-            MediaRouter normalizes provider requests, dimensions, async jobs,
+            AI Media Router normalizes provider requests, dimensions, async jobs,
             batching, and result shapes so product teams can ship faster
             without rewriting every integration from scratch.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="https://github.com/Zehight/mediaRouter">Open Repository</a>
+            <a class="button primary" href="https://github.com/Zehight/ai-media-router">Open Repository</a>
             <a class="button secondary" href="../README.md">Read English README</a>
           </div>
         </section>
@@ -46,14 +46,14 @@
         <section class="grid-section">
           <article class="card card-spotlight">
             <span class="label">Install</span>
-            <pre><code>npm install @miragari/providers</code></pre>
+            <pre><code>npm install @miragari/ai-media-router</code></pre>
           </article>
           <article class="card">
             <span class="label">Packages</span>
             <ul class="compact-list">
-              <li><code>@miragari/core</code></li>
-              <li><code>@miragari/client</code></li>
-              <li><code>@miragari/providers</code></li>
+              <li><code>@miragari/ai-media-router-core</code></li>
+              <li><code>@miragari/ai-media-router-client</code></li>
+              <li><code>@miragari/ai-media-router</code></li>
             </ul>
           </article>
           <article class="card">
@@ -92,7 +92,7 @@
             <p class="eyebrow">Quick start</p>
             <h2>Generate an image with one provider today, swap providers later.</h2>
           </div>
-          <pre><code>import { createMediaRouter } from "@miragari/providers"
+          <pre><code>import { createMediaRouter } from "@miragari/ai-media-router"
 
 const client = createMediaRouter({
   provider: "openai",

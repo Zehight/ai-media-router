@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { ProviderCreateContext } from "@miragari/core"
+import type { ProviderCreateContext } from "@miragari/ai-media-router-core"
 import {
   appendPromptFlags,
   assertNoUnusedMediaInputs,

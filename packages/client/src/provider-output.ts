@@ -5,7 +5,7 @@ import {
   type GenerationResult,
   type MediaAsset,
   type MediaType,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import { normalizeTerminalJob } from "./terminal.js"
 
 const JOB_STATUSES = new Set(["queued", "running", "succeeded", "failed", "cancelled"])

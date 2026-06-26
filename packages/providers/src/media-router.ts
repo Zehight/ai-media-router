@@ -6,12 +6,12 @@ import {
   type MediaRouterDefaults,
   type MediaRouterOptions,
   type MediaRouterProfile,
-} from "@miragari/client"
+} from "@miragari/ai-media-router-client"
 import {
   MediaRouterException,
   createMediaRouterError,
   type ProviderPlugin,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 import { builtinProviderPlugins } from "./builtin.js"
 
 const builtinProviderEnvKeys = {

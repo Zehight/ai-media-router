@@ -1,4 +1,4 @@
-import type { ProviderPlugin } from "@miragari/core"
+import type { ProviderPlugin } from "@miragari/ai-media-router-core"
 import { googleProvider } from "./google/index.js"
 import { happyhorseProvider } from "./happyhorse/index.js"
 import { openaiProvider } from "./openai/index.js"

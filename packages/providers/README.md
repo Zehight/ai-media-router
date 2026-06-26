@@ -1,4 +1,4 @@
-# @miragari/providers
+# @miragari/ai-media-router
 
 Built-in MediaRouter providers plus the `createMediaRouter()` convenience
 factory.
@@ -6,7 +6,7 @@ factory.
 ## Install
 
 ```bash
-npm install @miragari/providers
+npm install @miragari/ai-media-router
 ```
 
 ## Use this package when
@@ -17,9 +17,9 @@ npm install @miragari/providers
 
 ## Repository docs
 
-- Root overview: <https://github.com/Zehight/mediaRouter>
-- English docs: <https://github.com/Zehight/mediaRouter/blob/main/docs/en/getting-started.md>
-- 中文文档: <https://github.com/Zehight/mediaRouter/blob/main/docs/zh-CN/getting-started.md>
+- Root overview: <https://github.com/Zehight/ai-media-router>
+- English docs: <https://github.com/Zehight/ai-media-router/blob/main/docs/en/getting-started.md>
+- 中文文档: <https://github.com/Zehight/ai-media-router/blob/main/docs/zh-CN/getting-started.md>
 
 ---
 
@@ -84,7 +84,7 @@ import {
   getImageInputs,
   requirePrompt,
   unsupportedInput,
-} from "@miragari/providers"
+} from "@miragari/ai-media-router"
 
 export const exampleProvider = defineHttpProvider({
   id: "example",
@@ -419,7 +419,7 @@ import {
   pendingProviderJob,
   pendingStatus,
   providerError,
-} from "@miragari/providers"
+} from "@miragari/ai-media-router"
 
 export const taskProvider = defineHttpProvider({
   id: "task-provider",
@@ -516,7 +516,7 @@ export const cancellableProvider = defineHttpProvider({
 Provider PRs should use the shared in-repo test harness to verify request
 mapping and response mapping with the same runtime shape used by built-in
 providers. The harness is intentionally not exported from
-`@miragari/providers`; import it by relative path from provider tests.
+`@miragari/ai-media-router`; import it by relative path from provider tests.
 
 ```ts
 import {
@@ -583,7 +583,7 @@ provider status, and cancellation when the provider supports it.
   mapping before adding custom local helpers.
 - Preserve provider-specific controls through `providerOptions`.
 - Normalize errors with `createMediaRouterError()` or `MediaRouterException`
-  from `@miragari/core`; do not hand-roll error objects.
+  from `@miragari/ai-media-router-core`; do not hand-roll error objects.
 - Custom `normalizeError` results that are not branded `MediaRouterError`
   values are treated as `UNKNOWN`.
 - Terminal failed jobs must set `job.error` with `createMediaRouterError()`;

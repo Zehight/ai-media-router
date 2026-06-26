@@ -5,7 +5,7 @@ import {
   type GenerationJob,
   type GenerationResult,
   type MediaRouterError,
-} from "@miragari/core"
+} from "@miragari/ai-media-router-core"
 
 export function normalizeTerminalJob(job: GenerationJob): GenerationJob {
   if (job.status === "succeeded" && !job.result) {
