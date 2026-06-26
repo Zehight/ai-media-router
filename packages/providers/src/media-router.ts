@@ -215,9 +215,12 @@ function providerInstances(options: BuiltinMediaRouterOptions): MediaRouterOptio
 function topLevelProviderInstances(
   options: BuiltinMediaRouterOptions,
 ): MediaRouterOptions["providers"] | undefined {
-  const entries = (Object.keys(builtinProviderEnvKeys) as BuiltinProviderName[])
-    .map((provider) => [provider, options[provider]] as const)
-    .filter(([, value]) => value !== undefined)
+  const entries = Object.keys(options)
+    .filter((key): key is BuiltinProviderName => isBuiltinProviderName(key))
+    .map((provider) => [
+      provider,
+      options[provider] ?? envApiKey(provider),
+    ] as const)
   return entries.length ? Object.fromEntries(entries) : undefined
 }
 
